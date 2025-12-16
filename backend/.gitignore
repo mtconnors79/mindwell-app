@@ -1,0 +1,9 @@
+node_modules/
+.env
+.DS_Store
+*.log
+dist/
+build/
+
+# Firebase service account (contains private key)
+config/firebase-service-account.json
