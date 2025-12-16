@@ -18,32 +18,26 @@ import ProfileScreen from '../screens/main/ProfileScreen';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
+const HomeTabIcon = ({ focused, color, size }) => (
+  <Icon name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+);
+
+const CheckInTabIcon = ({ focused, color, size }) => (
+  <Icon name={focused ? 'create' : 'create-outline'} size={size} color={color} />
+);
+
+const MoodTabIcon = ({ focused, color, size }) => (
+  <Icon name={focused ? 'analytics' : 'analytics-outline'} size={size} color={color} />
+);
+
+const ProfileTabIcon = ({ focused, color, size }) => (
+  <Icon name={focused ? 'person' : 'person-outline'} size={size} color={color} />
+);
+
 const MainTabNavigator = () => {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-
-          switch (route.name) {
-            case 'Home':
-              iconName = focused ? 'home' : 'home-outline';
-              break;
-            case 'CheckIn':
-              iconName = focused ? 'create' : 'create-outline';
-              break;
-            case 'Mood':
-              iconName = focused ? 'analytics' : 'analytics-outline';
-              break;
-            case 'Profile':
-              iconName = focused ? 'person' : 'person-outline';
-              break;
-            default:
-              iconName = 'circle';
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
+      screenOptions={{
         tabBarActiveTintColor: '#6366F1',
         tabBarInactiveTintColor: 'gray',
         headerStyle: {
@@ -53,27 +47,39 @@ const MainTabNavigator = () => {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
-      })}
+      }}
     >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ title: 'MindWell' }}
+        options={{
+          title: 'MindWell',
+          tabBarIcon: HomeTabIcon,
+        }}
       />
       <Tab.Screen
         name="CheckIn"
         component={CheckInScreen}
-        options={{ title: 'Check In' }}
+        options={{
+          title: 'Check In',
+          tabBarIcon: CheckInTabIcon,
+        }}
       />
       <Tab.Screen
         name="Mood"
         component={MoodScreen}
-        options={{ title: 'Mood History' }}
+        options={{
+          title: 'Mood History',
+          tabBarIcon: MoodTabIcon,
+        }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ title: 'Profile' }}
+        options={{
+          title: 'Profile',
+          tabBarIcon: ProfileTabIcon,
+        }}
       />
     </Tab.Navigator>
   );
@@ -111,8 +117,8 @@ const AppNavigator = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = auth().onAuthStateChanged((user) => {
-      setUser(user);
+    const unsubscribe = auth().onAuthStateChanged((firebaseUser) => {
+      setUser(firebaseUser);
       if (initializing) {
         setInitializing(false);
       }

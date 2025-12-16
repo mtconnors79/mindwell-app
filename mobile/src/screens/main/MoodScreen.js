@@ -173,7 +173,7 @@ const MoodScreen = () => {
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: '#6366F1' }]}>
+              <Text style={[styles.statValue, styles.statValueTrend]}>
                 {stats.trend || 'stable'}
               </Text>
               <Text style={styles.statLabel}>Trend</Text>
@@ -319,6 +319,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1F2937',
     textTransform: 'capitalize',
+  },
+  statValueTrend: {
+    color: '#6366F1',
   },
   statLabel: {
     fontSize: 12,
