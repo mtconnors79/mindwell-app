@@ -8,8 +8,18 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
-# Required for Firebase
-use_modular_headers!
+# Enable modular headers for Firebase dependencies
+pod 'FirebaseCore', :modular_headers => true
+pod 'FirebaseAuth', :modular_headers => true
+pod 'FirebaseAuthInterop', :modular_headers => true
+pod 'FirebaseAppCheckInterop', :modular_headers => true
+pod 'FirebaseCoreExtension', :modular_headers => true
+pod 'FirebaseCoreInternal', :modular_headers => true
+pod 'GoogleUtilities', :modular_headers => true
+pod 'RecaptchaInterop', :modular_headers => true
+
+# Use static frameworks to properly expose Swift headers from Firebase
+use_frameworks! :linkage => :static
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
