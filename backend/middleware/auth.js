@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { verifyIdToken } = require('../config/firebase');
-const { User } = require('../models');
+const { User, Profile } = require('../models');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -111,10 +111,31 @@ const authenticateAndLoadUser = async (req, res, next) => {
     }
 
     if (!user) {
-      return res.status(404).json({
-        error: 'Not Found',
-        message: 'User not found in database'
-      });
+      // For Firebase users, auto-create the user in the database
+      if (type === 'firebase') {
+        user = await User.create({
+          email: decoded.email,
+          password_hash: `firebase:${decoded.uid}`
+        });
+
+        // Create profile with Firebase display name if available
+        await Profile.create({
+          user_id: user.id,
+          name: decoded.name || null
+        });
+
+        // Reload user with profile
+        user = await User.findByPk(user.id, {
+          attributes: ['id', 'email', 'created_at']
+        });
+
+        console.log(`Auto-created user for Firebase account: ${decoded.email}`);
+      } else {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'User not found in database'
+        });
+      }
     }
 
     // Attach user info to request
