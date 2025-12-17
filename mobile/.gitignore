@@ -77,3 +77,6 @@ GoogleService-Info.plist
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Generated asset manifest files
+**/link-assets-manifest.json
