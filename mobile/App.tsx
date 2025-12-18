@@ -12,6 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import firebase from '@react-native-firebase/app';
+import Config from 'react-native-config';
 import AppNavigator from './src/navigation/AppNavigator';
 
 // Ignore specific warnings
@@ -29,7 +30,7 @@ function App(): React.JSX.Element {
         if (firebase.apps.length > 0) {
           // Configure Google Sign-In after Firebase is ready
           GoogleSignin.configure({
-            webClientId: '1000603870908-vhc03968kr7glq65505vfs85c717gtvc.apps.googleusercontent.com',
+            webClientId: Config.WEB_CLIENT_ID,
           });
         }
       } catch (error) {

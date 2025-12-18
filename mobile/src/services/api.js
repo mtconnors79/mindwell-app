@@ -1,15 +1,22 @@
 import axios from 'axios';
 import auth from '@react-native-firebase/auth';
 import { Platform } from 'react-native';
+import Config from 'react-native-config';
 
 // Base URL for the API
-// Android emulator uses 10.0.2.2 to reach host machine's localhost
-// iOS simulator can use localhost directly
-const BASE_URL = Platform.select({
-  android: 'http://10.0.2.2:3000/api',
-  ios: 'http://localhost:3000/api',
-  default: 'http://localhost:3000/api',
-});
+// Uses environment variable, with platform-specific fallback for Android emulator
+const getBaseUrl = () => {
+  const envUrl = Config.API_BASE_URL;
+
+  // Android emulator uses 10.0.2.2 to reach host machine's localhost
+  if (Platform.OS === 'android' && envUrl?.includes('localhost')) {
+    return envUrl.replace('localhost', '10.0.2.2');
+  }
+
+  return envUrl || 'http://localhost:3000/api';
+};
+
+const BASE_URL = getBaseUrl();
 
 // Create axios instance
 const api = axios.create({
