@@ -108,7 +108,7 @@ const ProfileScreen = ({ navigation }) => {
   const handleSupport = () => {
     Alert.alert(
       'App Support',
-      'For app support, email: support@mindwell.app',
+      'For app support, email: support@soulbloom.app',
       [{ text: 'OK' }]
     );
   };
@@ -271,7 +271,7 @@ const ProfileScreen = ({ navigation }) => {
       </View>
 
       {/* App Version */}
-      <Text style={styles.version}>MindWell v0.5.0</Text>
+      <Text style={styles.version}>SoulBloom v0.5.0</Text>
 
       {/* Crisis Resources Modal */}
       <CrisisResourcesModal

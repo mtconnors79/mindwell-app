@@ -114,8 +114,11 @@ const LoginScreen = ({ navigation }) => {
               placeholder="Password"
               placeholderTextColor="#999"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => setPassword(text)}
               secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="oneTimeCode"
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Icon

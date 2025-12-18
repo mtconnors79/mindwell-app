@@ -61,7 +61,7 @@ const createContact = async (req, res) => {
         created_at: contact.created_at
       },
       confirmation_url: getConfirmationUrl(confirmation_token),
-      sms_message: `${userName} added you as a support contact on MindWell. Unsure? Verify with them first. Not spam: ${getConfirmationUrl(confirmation_token)}`
+      sms_message: `${userName} added you as a support contact on SoulBloom. Unsure? Verify with them first. Not spam: ${getConfirmationUrl(confirmation_token)}`
     });
   } catch (error) {
     console.error('Create contact error:', error.message);
@@ -412,7 +412,7 @@ const resendConfirmation = async (req, res) => {
     res.json({
       message: 'Confirmation resent successfully',
       confirmation_url: getConfirmationUrl(confirmation_token),
-      sms_message: `${userName} added you as a support contact on MindWell. Unsure? Verify with them first. Not spam: ${getConfirmationUrl(confirmation_token)}`
+      sms_message: `${userName} added you as a support contact on SoulBloom. Unsure? Verify with them first. Not spam: ${getConfirmationUrl(confirmation_token)}`
     });
   } catch (error) {
     console.error('Resend confirmation error:', error.message);
@@ -457,7 +457,7 @@ const getConfirmationHtml = (userName, token) => `
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Support Contact Confirmation - MindWell</title>
+  <title>Support Contact Confirmation - SoulBloom</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -552,7 +552,7 @@ const getConfirmationHtml = (userName, token) => `
       <div class="header">
         <div class="logo">💜</div>
         <h1>Support Contact Request</h1>
-        <p class="subtitle"><strong>${userName}</strong> would like you to be their support contact on MindWell.</p>
+        <p class="subtitle"><strong>${userName}</strong> would like you to be their support contact on SoulBloom.</p>
       </div>
 
       <div class="info-box">
@@ -572,7 +572,7 @@ const getConfirmationHtml = (userName, token) => `
       </div>
 
       <p class="disclaimer">
-        MindWell is a mental wellness app. By accepting, you agree to be a supportive contact,
+        SoulBloom is a mental wellness app. By accepting, you agree to be a supportive contact,
         not a medical or crisis responder.
       </p>
     </div>
@@ -631,7 +631,7 @@ const getErrorHtml = (title, message) => `
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} - MindWell</title>
+  <title>${title} - SoulBloom</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -672,7 +672,7 @@ const getStatusHtml = (status, message) => `
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Request Status - MindWell</title>
+  <title>Request Status - SoulBloom</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {

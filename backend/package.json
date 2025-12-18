@@ -1,7 +1,7 @@
 {
-  "name": "mindwell-backend",
+  "name": "soulbloom-backend",
   "version": "1.0.0",
-  "description": "MindWell App Backend Server",
+  "description": "SoulBloom App Backend Server - Grow gently, live fully",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

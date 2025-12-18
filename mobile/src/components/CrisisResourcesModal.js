@@ -16,7 +16,7 @@ import SendSMS from 'react-native-sms';
 import { resourcesAPI, emergencyContactAPI } from '../services/api';
 import auth from '@react-native-firebase/auth';
 
-const NOTIFY_PREFERENCE_KEY = '@mindwell_notify_preference';
+const NOTIFY_PREFERENCE_KEY = '@soulbloom_notify_preference';
 
 const CrisisResourcesModal = ({
   visible,

@@ -78,7 +78,8 @@ const RegisterScreen = ({ navigation }) => {
       );
       // Navigation is handled by AppNavigator based on auth state
     } catch (error) {
-      let message = 'Registration failed. Please try again.';
+      console.error('Registration Error:', error);
+      let message = error.message || 'Registration failed. Please try again.';
       switch (error.code) {
         case 'auth/email-already-in-use':
           message = 'An account with this email already exists';
@@ -145,8 +146,11 @@ const RegisterScreen = ({ navigation }) => {
               placeholder="Password *"
               placeholderTextColor="#999"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => setPassword(text)}
               secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="oneTimeCode"
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Icon
@@ -164,8 +168,11 @@ const RegisterScreen = ({ navigation }) => {
               placeholder="Confirm Password *"
               placeholderTextColor="#999"
               value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              onChangeText={(text) => setConfirmPassword(text)}
               secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="oneTimeCode"
             />
           </View>
 

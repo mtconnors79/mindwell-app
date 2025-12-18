@@ -1,4 +1,6 @@
-# MindWell Mobile App
+# SoulBloom Mobile App
+
+*Grow gently, live fully*
 
 React Native application for iOS and Android.
 
@@ -190,14 +192,14 @@ API_BASE_URL=http://localhost:3000/api
 
 ### GoogleService-Info.plist
 1. Download from Firebase Console
-2. Place in `ios/MindWellMobile/`
+2. Place in `ios/SoulBloom/`
 3. Add to Xcode project
 
 ### URL Schemes
 The `REVERSED_CLIENT_ID` from GoogleService-Info.plist must be added to URL schemes in Xcode.
 
 ### Vector Icons
-Fonts are linked in `ios/MindWellMobile/Info.plist`:
+Fonts are linked in `ios/SoulBloom/Info.plist`:
 ```xml
 <key>UIAppFonts</key>
 <array>

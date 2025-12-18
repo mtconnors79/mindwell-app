@@ -18,7 +18,7 @@ import SendSMS from 'react-native-sms';
 import { emergencyContactAPI } from '../../services/api';
 import AddContactModal from '../../components/AddContactModal';
 
-const NOTIFY_PREFERENCE_KEY = '@mindwell_notify_preference';
+const NOTIFY_PREFERENCE_KEY = '@soulbloom_notify_preference';
 
 const EmergencyContactsScreen = ({ navigation }) => {
   const [contacts, setContacts] = useState([]);

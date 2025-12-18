@@ -389,7 +389,8 @@ const SettingsScreen = ({ navigation }) => {
               <View style={styles.appIcon}>
                 <Icon name="heart" size={32} color="#6366F1" />
               </View>
-              <Text style={styles.appName}>MindWell</Text>
+              <Text style={styles.appName}>SoulBloom</Text>
+              <Text style={styles.appTagline}>Grow gently, live fully</Text>
               <Text style={styles.appVersion}>Version 0.5.0</Text>
               <Text style={styles.madeWith}>Made with ❤️</Text>
             </View>
@@ -610,6 +611,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#1F2937',
+  },
+  appTagline: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: '#6366F1',
+    marginTop: 4,
   },
   appVersion: {
     fontSize: 14,

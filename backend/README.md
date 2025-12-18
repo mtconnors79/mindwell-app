@@ -1,6 +1,8 @@
-# MindWell Backend API
+# SoulBloom Backend API
 
-Node.js/Express REST API server for the MindWell mental health application.
+*Grow gently, live fully*
+
+Node.js/Express REST API server for the SoulBloom mental health application.
 
 ## Tech Stack
 
@@ -27,7 +29,7 @@ cp .env.example .env
 # Save as config/firebase-service-account.json
 
 # Create PostgreSQL database
-createdb mindwell_db
+createdb soulbloom_db
 
 # Start server
 npm start        # Production

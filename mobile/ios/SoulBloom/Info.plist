@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>MindWellMobile</string>
+	<string>SoulBloom</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -62,7 +62,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.1000603870908-a18e028o7bb0nol1vrgu6qhasnd2jbch</string>
+				<string>com.googleusercontent.apps.919415049820-950j5alor52fi2b83khqdshdvganfg0s</string>
 			</array>
 		</dict>
 	</array>

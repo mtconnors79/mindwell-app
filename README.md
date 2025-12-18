@@ -1,4 +1,6 @@
-# MindWell - Mental Health & Wellness App
+# SoulBloom - Mental Health & Wellness App
+
+*Grow gently, live fully*
 
 A comprehensive mental health tracking and wellness application built with React Native (iOS/Android) and Node.js backend.
 
@@ -42,6 +44,17 @@ A comprehensive mental health tracking and wellness application built with React
 - Manual access via Profile screen
 - Includes National Suicide Prevention Lifeline, Crisis Text Line, and more
 
+### Emergency Contacts with Consent Flow
+- Add support contacts with SMS confirmation workflow
+- 14-day token expiration with resend capability
+- HTML consent page explaining contact responsibilities
+- Optional 911 notification to primary contact
+
+### Scheduled Reminders
+- Daily check-in reminder with customizable time
+- Custom reminders with frequency options (daily/weekdays/weekends/custom)
+- Multiple reminder types (check-in/mindfulness/both)
+
 ### User Authentication
 - Firebase Authentication with Google Sign-In
 - Secure JWT token management
@@ -57,6 +70,7 @@ A comprehensive mental health tracking and wellness application built with React
 - react-native-config for environment variables
 - react-native-vector-icons (Ionicons)
 - Animated API for breathing exercise visuals
+- @notifee/react-native for local notifications
 
 ### Backend
 - Node.js with Express
@@ -68,7 +82,7 @@ A comprehensive mental health tracking and wellness application built with React
 ## Project Structure
 
 ```
-mindwell-app/
+soulbloom-app/
 ├── backend/                 # Node.js API server
 │   ├── config/             # Database and Firebase configuration
 │   ├── controllers/        # Request handlers
@@ -101,8 +115,8 @@ mindwell-app/
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/mtconnors79/mindwell-app.git
-cd mindwell-app
+git clone https://github.com/mtconnors79/soulbloom-app.git
+cd soulbloom-app
 ```
 
 ### 2. Backend Setup
@@ -125,7 +139,7 @@ npm start
 ### 3. Database Setup
 ```bash
 # PostgreSQL - Create database
-createdb mindwell_db
+createdb soulbloom_db
 # Tables are auto-created by Sequelize on first run
 
 # MongoDB - Start service
@@ -159,6 +173,7 @@ npx react-native run-android
 |----------|-------------|
 | `PORT` | Server port (default: 3000) |
 | `NODE_ENV` | Environment (development/production) |
+| `API_BASE_URL` | Public API URL for confirmation links |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | PostgreSQL connection |
 | `MONGODB_URI` | MongoDB connection string |
 | `FIREBASE_*` | Firebase project configuration |
@@ -239,8 +254,12 @@ npx react-native run-android
 ### Emergency Contacts (`/api/emergency-contacts`)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/` | Create contact |
+| POST | `/` | Create contact (returns SMS template) |
 | GET | `/` | List contacts |
+| GET | `/primary` | Get active primary contact |
+| GET | `/confirm/:token` | HTML consent page (public) |
+| POST | `/confirm/:token` | Accept/decline confirmation (public) |
+| POST | `/:id/resend` | Resend confirmation SMS |
 | GET | `/:id` | Get contact |
 | PUT | `/:id` | Update contact |
 | DELETE | `/:id` | Delete contact |
@@ -272,6 +291,8 @@ npx react-native run-android
 | Mindfulness | Mindfulness | Activity library with breathing exercises |
 | Progress | Progress | Today's goals, streaks, achievements, challenges |
 | Profile | Profile | User settings, crisis resources access |
+| Settings | (Stack) | Notification reminders, display, about |
+| Emergency Contacts | (Stack) | Support contact management |
 
 ## Contributing
 

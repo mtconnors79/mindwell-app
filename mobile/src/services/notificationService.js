@@ -6,8 +6,8 @@ import notifee, {
 } from '@notifee/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const REMINDERS_STORAGE_KEY = '@mindwell_reminders';
-const DAILY_REMINDER_KEY = '@mindwell_daily_reminder';
+const REMINDERS_STORAGE_KEY = '@soulbloom_reminders';
+const DAILY_REMINDER_KEY = '@soulbloom_daily_reminder';
 
 // Gentle message templates
 const CHECK_IN_MESSAGES = [
@@ -111,7 +111,7 @@ export const scheduleNotification = async (reminder) => {
   await notifee.createTriggerNotification(
     {
       id: `reminder_${id}`,
-      title: 'MindWell Reminder',
+      title: 'SoulBloom Reminder',
       body: message,
       android: {
         channelId: 'reminders',
@@ -202,7 +202,7 @@ export const scheduleDailyReminder = async (time) => {
   await notifee.createTriggerNotification(
     {
       id: 'daily_reminder',
-      title: 'MindWell',
+      title: 'SoulBloom',
       body: 'How are you feeling? Take a moment to check in.',
       android: {
         channelId: 'reminders',

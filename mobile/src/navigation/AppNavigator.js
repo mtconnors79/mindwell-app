@@ -66,7 +66,7 @@ const MainTabNavigator = () => {
         name="Home"
         component={HomeScreen}
         options={{
-          title: 'MindWell',
+          title: 'SoulBloom',
           tabBarIcon: HomeTabIcon,
         }}
       />
@@ -170,7 +170,7 @@ const AuthStack = () => {
       <Stack.Screen
         name="Login"
         component={LoginScreen}
-        options={{ title: 'Welcome to MindWell' }}
+        options={{ title: 'Welcome to SoulBloom' }}
       />
       <Stack.Screen
         name="Register"

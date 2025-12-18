@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the MindWell app are documented in this file.
+All notable changes to the SoulBloom app (*Grow gently, live fully*) are documented in this file.
 
 ## [0.5.0] - 2025-12-18
 
