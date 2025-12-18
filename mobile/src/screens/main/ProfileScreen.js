@@ -33,7 +33,7 @@ const ProfileMenuItem = ({ icon, label, value, onPress, danger }) => (
   </TouchableOpacity>
 );
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [profile, setProfile] = useState(null);
@@ -94,7 +94,7 @@ const ProfileScreen = () => {
   };
 
   const handleNotificationSettings = () => {
-    Alert.alert('Coming Soon', 'Notification settings will be available in a future update.');
+    navigation.navigate('Settings');
   };
 
   const handlePrivacySettings = () => {
@@ -207,6 +207,12 @@ const ProfileScreen = () => {
             label="Privacy & Security"
             onPress={handlePrivacySettings}
           />
+          <ProfileMenuItem
+            icon="settings-outline"
+            label="Settings"
+            value="Notifications, display & more"
+            onPress={() => navigation.navigate('Settings')}
+          />
         </View>
       </View>
 
@@ -267,7 +273,7 @@ const ProfileScreen = () => {
       </View>
 
       {/* App Version */}
-      <Text style={styles.version}>MindWell v1.0.0</Text>
+      <Text style={styles.version}>MindWell v0.5.0</Text>
 
       {/* Crisis Resources Modal */}
       <CrisisResourcesModal

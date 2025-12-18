@@ -16,8 +16,10 @@ import MoodScreen from '../screens/main/MoodScreen';
 import MindfulnessScreen from '../screens/main/MindfulnessScreen';
 import ProgressScreen from '../screens/main/ProgressScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
+import SettingsScreen from '../screens/main/SettingsScreen';
 
 const Stack = createStackNavigator();
+const MainStack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const HomeTabIcon = ({ focused, color, size }) => (
@@ -111,6 +113,32 @@ const MainTabNavigator = () => {
   );
 };
 
+const MainStackNavigator = () => {
+  return (
+    <MainStack.Navigator>
+      <MainStack.Screen
+        name="MainTabs"
+        component={MainTabNavigator}
+        options={{ headerShown: false }}
+      />
+      <MainStack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          title: 'Settings',
+          headerStyle: {
+            backgroundColor: '#6366F1',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
+    </MainStack.Navigator>
+  );
+};
+
 const AuthStack = () => {
   return (
     <Stack.Navigator
@@ -159,7 +187,7 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      {user ? <MainTabNavigator /> : <AuthStack />}
+      {user ? <MainStackNavigator /> : <AuthStack />}
     </NavigationContainer>
   );
 };
