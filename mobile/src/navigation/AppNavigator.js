@@ -13,6 +13,7 @@ import RegisterScreen from '../screens/auth/RegisterScreen';
 import HomeScreen from '../screens/main/HomeScreen';
 import CheckInScreen from '../screens/main/CheckInScreen';
 import MoodScreen from '../screens/main/MoodScreen';
+import MindfulnessScreen from '../screens/main/MindfulnessScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 
 const Stack = createStackNavigator();
@@ -28,6 +29,10 @@ const CheckInTabIcon = ({ focused, color, size }) => (
 
 const MoodTabIcon = ({ focused, color, size }) => (
   <Icon name={focused ? 'analytics' : 'analytics-outline'} size={size} color={color} />
+);
+
+const MindfulnessTabIcon = ({ focused, color, size }) => (
+  <Icon name={focused ? 'leaf' : 'leaf-outline'} size={size} color={color} />
 );
 
 const ProfileTabIcon = ({ focused, color, size }) => (
@@ -71,6 +76,14 @@ const MainTabNavigator = () => {
         options={{
           title: 'My Journey',
           tabBarIcon: MoodTabIcon,
+        }}
+      />
+      <Tab.Screen
+        name="Mindfulness"
+        component={MindfulnessScreen}
+        options={{
+          title: 'Mindfulness',
+          tabBarIcon: MindfulnessTabIcon,
         }}
       />
       <Tab.Screen

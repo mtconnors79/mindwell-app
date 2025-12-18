@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth';
-import { moodAPI, checkinAPI } from '../../services/api';
+import { moodAPI, checkinAPI, mindfulnessAPI } from '../../services/api';
 
 const QUICK_MOOD_OPTIONS = [
   { emoji: '😄', label: 'great', score: 1.0, color: '#10B981' },
@@ -34,6 +34,7 @@ const HomeScreen = ({ navigation }) => {
   const [moodStats, setMoodStats] = useState(null);
   const [recentCheckin, setRecentCheckin] = useState(null);
   const [quickMoodLoading, setQuickMoodLoading] = useState(false);
+  const [suggestedActivity, setSuggestedActivity] = useState(null);
   const user = auth().currentUser;
 
   const fetchData = useCallback(async () => {
@@ -44,7 +45,17 @@ const HomeScreen = ({ navigation }) => {
       ]);
 
       setMoodStats(moodResponse.data?.stats || null);
-      setRecentCheckin(checkinResponse.data?.checkins?.[0] || null);
+      const latestCheckin = checkinResponse.data?.checkins?.[0] || null;
+      setRecentCheckin(latestCheckin);
+
+      // Fetch suggested activity based on mood
+      const mood = latestCheckin?.mood_rating || 'okay';
+      try {
+        const suggestionResponse = await mindfulnessAPI.getSuggested(mood);
+        setSuggestedActivity(suggestionResponse.data?.suggestion || null);
+      } catch (e) {
+        console.log('Could not fetch suggested activity');
+      }
     } catch (error) {
       console.error('Error fetching home data:', error);
     } finally {
@@ -151,6 +162,30 @@ const HomeScreen = ({ navigation }) => {
           <ActivityIndicator size="small" color="#6366F1" style={styles.quickMoodLoader} />
         )}
       </View>
+
+      {/* Suggested Activity Card */}
+      {suggestedActivity && (
+        <TouchableOpacity
+          style={styles.suggestedCard}
+          onPress={() => navigation.navigate('Mindfulness')}
+        >
+          <View style={styles.suggestedHeader}>
+            <Icon name="leaf" size={20} color="#10B981" />
+            <Text style={styles.suggestedLabel}>Suggested Activity</Text>
+          </View>
+          <Text style={styles.suggestedTitle}>{suggestedActivity.activity?.name}</Text>
+          <Text style={styles.suggestedReason}>{suggestedActivity.reason}</Text>
+          <View style={styles.suggestedFooter}>
+            <Text style={styles.suggestedDuration}>
+              {Math.ceil(suggestedActivity.activity?.duration_seconds / 60)} min
+            </Text>
+            <View style={styles.suggestedAction}>
+              <Text style={styles.suggestedActionText}>Start</Text>
+              <Icon name="chevron-forward" size={16} color="#10B981" />
+            </View>
+          </View>
+        </TouchableOpacity>
+      )}
 
       {/* Mood Summary Card */}
       <View style={styles.card}>
@@ -315,6 +350,57 @@ const styles = StyleSheet.create({
   },
   quickMoodLoader: {
     marginTop: 12,
+  },
+  suggestedCard: {
+    backgroundColor: '#ECFDF5',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  suggestedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  suggestedLabel: {
+    fontSize: 12,
+    color: '#059669',
+    fontWeight: '600',
+    marginLeft: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  suggestedTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#065F46',
+    marginBottom: 4,
+  },
+  suggestedReason: {
+    fontSize: 14,
+    color: '#047857',
+    marginBottom: 12,
+  },
+  suggestedFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  suggestedDuration: {
+    fontSize: 13,
+    color: '#059669',
+    fontWeight: '500',
+  },
+  suggestedAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  suggestedActionText: {
+    fontSize: 14,
+    color: '#10B981',
+    fontWeight: '600',
   },
   card: {
     backgroundColor: '#fff',

@@ -186,4 +186,17 @@ export const resourcesAPI = {
     api.get('/resources/crisis'),
 };
 
+export const mindfulnessAPI = {
+  getActivities: () =>
+    api.get('/activities/mindfulness'),
+  getActivity: (activityId) =>
+    api.get(`/activities/mindfulness/${activityId}`),
+  completeActivity: (activityId) =>
+    api.post(`/activities/mindfulness/${activityId}/complete`),
+  getStats: () =>
+    api.get('/activities/mindfulness/stats/user'),
+  getSuggested: (mood) =>
+    api.get('/activities/mindfulness/suggested/activity', { params: { mood } }),
+};
+
 export default api;

@@ -7,6 +7,7 @@ const User = require('./User');
 const Profile = require('./Profile');
 const MoodEntry = require('./MoodEntry');
 const EmergencyContact = require('./EmergencyContact');
+const ActivityCompletion = require('./ActivityCompletion');
 
 // Define Sequelize Associations
 User.hasOne(Profile, { foreignKey: 'user_id', as: 'profile' });
@@ -18,6 +19,9 @@ MoodEntry.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(EmergencyContact, { foreignKey: 'user_id', as: 'emergencyContacts' });
 EmergencyContact.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
+User.hasMany(ActivityCompletion, { foreignKey: 'user_id', as: 'activityCompletions' });
+ActivityCompletion.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
 module.exports = {
   // MongoDB Models
   CheckinResponse,
@@ -26,5 +30,6 @@ module.exports = {
   User,
   Profile,
   MoodEntry,
-  EmergencyContact
+  EmergencyContact,
+  ActivityCompletion
 };
