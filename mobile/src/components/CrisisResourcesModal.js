@@ -87,9 +87,9 @@ const CrisisResourcesModal = ({
     return user?.displayName || user?.email?.split('@')[0] || 'Someone';
   };
 
-  const sendSupportAlert = (contact) => {
+  const sendSupportAlert = (contact, callback) => {
     const userName = getUserName();
-    const message = `Hi, ${userName} wanted you to know they could use some support right now. Please consider checking in with them.`;
+    const message = `Hi, ${userName} may be going through a difficult time and wanted you to be aware. Please check in when you can. - Sent via SoulBloom`;
 
     SendSMS.send(
       {
@@ -101,10 +101,12 @@ const CrisisResourcesModal = ({
       (completed, cancelled, error) => {
         if (completed) {
           Alert.alert('Sent', `${contact.name} has been notified.`);
-        } else if (cancelled) {
-          // User cancelled, no action needed
         } else if (error) {
-          Alert.alert('Error', 'Failed to send message. Please try again.');
+          Alert.alert('Error', 'Failed to send message.');
+        }
+        // Call callback after SMS composer closes (sent, cancelled, or error)
+        if (callback) {
+          callback();
         }
       }
     );
@@ -127,42 +129,58 @@ const CrisisResourcesModal = ({
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Send',
-          onPress: () => sendSupportAlert(primaryContact),
+          onPress: () => sendSupportAlert(primaryContact, null),
         },
       ]
     );
   };
 
+  const openPhoneDialer = (phoneNumber) => {
+    // Opens phone dialer with number pre-filled, does NOT auto-call
+    Linking.openURL(`tel:${phoneNumber}`);
+  };
+
   const handleCall = (phoneNumber, isEmergency = false) => {
-    if (isEmergency && primaryContact) {
-      if (notifyPreference === 'always') {
-        // Auto-notify primary contact
-        sendSupportAlert(primaryContact);
-        Linking.openURL(`tel:${phoneNumber}`);
-      } else {
-        // Ask first
+    if (isEmergency) {
+      // Check if user has a primary emergency contact
+      if (primaryContact) {
+        // Ask if user wants to notify their contact
         Alert.alert(
-          'Notify Support Contact?',
-          `Would you also like to notify ${primaryContact.name}?`,
+          'Notify Emergency Contact?',
+          `Would you like to notify ${primaryContact.name} that you may need support?`,
           [
             {
-              text: 'No, just call',
-              onPress: () => Linking.openURL(`tel:${phoneNumber}`),
+              text: 'No',
+              style: 'cancel',
+              onPress: () => openPhoneDialer(phoneNumber),
             },
             {
-              text: 'Yes, notify them',
+              text: 'Yes',
               onPress: () => {
-                sendSupportAlert(primaryContact);
-                Linking.openURL(`tel:${phoneNumber}`);
+                // Open SMS composer, then open dialer after
+                sendSupportAlert(primaryContact, () => {
+                  openPhoneDialer(phoneNumber);
+                });
               },
             },
           ]
         );
-        return;
+      } else {
+        // No primary contact - show tip and proceed to call
+        Alert.alert(
+          'Calling 911',
+          'Tip: Add an emergency contact in Settings to notify someone when you need support.',
+          [
+            {
+              text: 'OK',
+              onPress: () => openPhoneDialer(phoneNumber),
+            },
+          ]
+        );
       }
     } else {
-      // Opens phone dialer with number pre-filled, does NOT auto-call
-      Linking.openURL(`tel:${phoneNumber}`);
+      // Non-emergency call
+      openPhoneDialer(phoneNumber);
     }
   };
 
