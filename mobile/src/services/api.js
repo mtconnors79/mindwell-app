@@ -166,6 +166,10 @@ export const emergencyContactAPI = {
     api.put(`/emergency-contacts/${id}`, data),
   delete: (id) =>
     api.delete(`/emergency-contacts/${id}`),
+  resendConfirmation: (id) =>
+    api.post(`/emergency-contacts/${id}/resend`),
+  getPrimary: () =>
+    api.get('/emergency-contacts/primary'),
 };
 
 export const notificationAPI = {

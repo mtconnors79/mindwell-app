@@ -17,6 +17,7 @@ import MindfulnessScreen from '../screens/main/MindfulnessScreen';
 import ProgressScreen from '../screens/main/ProgressScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
+import EmergencyContactsScreen from '../screens/main/EmergencyContactsScreen';
 
 const Stack = createStackNavigator();
 const MainStack = createStackNavigator();
@@ -126,6 +127,20 @@ const MainStackNavigator = () => {
         component={SettingsScreen}
         options={{
           title: 'Settings',
+          headerStyle: {
+            backgroundColor: '#6366F1',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
+      <MainStack.Screen
+        name="EmergencyContacts"
+        component={EmergencyContactsScreen}
+        options={{
+          title: 'Emergency Contacts',
           headerStyle: {
             backgroundColor: '#6366F1',
           },

@@ -102,7 +102,7 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleEmergencyContacts = () => {
-    Alert.alert('Coming Soon', 'Emergency contacts management will be available in a future update.');
+    navigation.navigate('EmergencyContacts');
   };
 
   const handleSupport = () => {
@@ -221,11 +221,9 @@ const ProfileScreen = ({ navigation }) => {
         <Text style={styles.sectionTitle}>Wellness</Text>
         <View style={styles.menuCard}>
           <ProfileMenuItem
-            icon="call-outline"
+            icon="people-outline"
             label="Emergency Contacts"
-            value={userInfo?.emergencyContacts?.length > 0
-              ? `${userInfo.emergencyContacts.length} contacts`
-              : 'Not set'}
+            value="Manage support contacts"
             onPress={handleEmergencyContacts}
           />
         </View>

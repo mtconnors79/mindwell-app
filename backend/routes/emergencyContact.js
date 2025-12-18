@@ -4,11 +4,23 @@ const emergencyContactController = require('../controllers/emergencyContactContr
 const { authenticateAndLoadUser } = require('../middleware/auth');
 const { emergencyContactValidation } = require('../middleware/validate');
 
-// All routes require authentication
+// Public routes (no authentication required)
+// Confirmation page - serves HTML
+router.get('/confirm/:token', emergencyContactController.getConfirmationPage);
+// Confirmation response - accepts/declines
+router.post('/confirm/:token', emergencyContactController.confirmContact);
+
+// All routes below require authentication
 router.use(authenticateAndLoadUser);
+
+// Get active primary contact (for crisis alerts)
+router.get('/primary', emergencyContactController.getActivePrimaryContact);
 
 // Reorder contacts
 router.put('/reorder', emergencyContactValidation.reorder, emergencyContactController.reorderContacts);
+
+// Resend confirmation SMS
+router.post('/:id/resend', emergencyContactValidation.getById, emergencyContactController.resendConfirmation);
 
 // CRUD operations
 router.post('/', emergencyContactValidation.create, emergencyContactController.createContact);

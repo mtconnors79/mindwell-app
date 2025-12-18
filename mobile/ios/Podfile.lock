@@ -2150,6 +2150,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - react-native-sms (1.12.0):
+    - React
   - React-NativeModulesApple (0.83.0):
     - boost
     - DoubleConversion
@@ -3036,6 +3038,7 @@ DEPENDENCIES:
   - react-native-config (from `../node_modules/react-native-config`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
+  - react-native-sms (from `../node_modules/react-native-sms`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-networking (from `../node_modules/react-native/ReactCommon/react/networking`)
   - React-oscompat (from `../node_modules/react-native/ReactCommon/oscompat`)
@@ -3196,6 +3199,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-slider:
     :path: "../node_modules/@react-native-community/slider"
+  react-native-sms:
+    :path: "../node_modules/react-native-sms"
   React-NativeModulesApple:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios"
   React-networking:
@@ -3346,6 +3351,7 @@ SPEC CHECKSUMS:
   react-native-config: 81fd713bbbc6fbe39588c975edf5485d0e15adf8
   react-native-safe-area-context: fea29ae0275beaa22f72d0a8be1eb0ab09c3feae
   react-native-slider: f44eb4f327db65c7c0519cc91aefb7b0d50f1615
+  react-native-sms: 05c30c6a7fe9befb24d0e7a95b0d2c8bdcbd7e51
   React-NativeModulesApple: 8ec75f44d317474025c5540b67ac1af838379dc4
   React-networking: b7a6de066cc739c038f7342932217d6fd362d329
   React-oscompat: aedc0afbded67280de6bb6bfac8cfde0389e2b33

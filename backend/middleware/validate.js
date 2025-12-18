@@ -381,6 +381,10 @@ const emergencyContactValidation = {
       .trim()
       .isLength({ max: 100 })
       .withMessage('Relationship must not exceed 100 characters'),
+    body('is_primary')
+      .optional()
+      .isBoolean()
+      .withMessage('is_primary must be a boolean'),
     handleValidationErrors
   ],
   update: [
@@ -407,6 +411,10 @@ const emergencyContactValidation = {
       .trim()
       .isLength({ max: 100 })
       .withMessage('Relationship must not exceed 100 characters'),
+    body('is_primary')
+      .optional()
+      .isBoolean()
+      .withMessage('is_primary must be a boolean'),
     handleValidationErrors
   ],
   getById: [

@@ -8,9 +8,15 @@ import {
   ScrollView,
   Linking,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { resourcesAPI } from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import SendSMS from 'react-native-sms';
+import { resourcesAPI, emergencyContactAPI } from '../services/api';
+import auth from '@react-native-firebase/auth';
+
+const NOTIFY_PREFERENCE_KEY = '@mindwell_notify_preference';
 
 const CrisisResourcesModal = ({
   visible,
@@ -21,10 +27,14 @@ const CrisisResourcesModal = ({
   const [resources, setResources] = useState(null);
   const [loading, setLoading] = useState(true);
   const [acknowledged, setAcknowledged] = useState(false);
+  const [primaryContact, setPrimaryContact] = useState(null);
+  const [notifyPreference, setNotifyPreference] = useState('ask_first');
 
   useEffect(() => {
     if (visible) {
       fetchResources();
+      fetchPrimaryContact();
+      loadNotifyPreference();
       setAcknowledged(false);
     }
   }, [visible]);
@@ -53,9 +63,107 @@ const CrisisResourcesModal = ({
     }
   };
 
-  const handleCall = (phoneNumber) => {
-    // Opens phone dialer with number pre-filled, does NOT auto-call
-    Linking.openURL(`tel:${phoneNumber}`);
+  const fetchPrimaryContact = async () => {
+    try {
+      const response = await emergencyContactAPI.getPrimary();
+      setPrimaryContact(response.data?.contact || null);
+    } catch (error) {
+      console.error('Error fetching primary contact:', error);
+      setPrimaryContact(null);
+    }
+  };
+
+  const loadNotifyPreference = async () => {
+    try {
+      const pref = await AsyncStorage.getItem(NOTIFY_PREFERENCE_KEY);
+      setNotifyPreference(pref || 'ask_first');
+    } catch (error) {
+      console.error('Error loading notify preference:', error);
+    }
+  };
+
+  const getUserName = () => {
+    const user = auth().currentUser;
+    return user?.displayName || user?.email?.split('@')[0] || 'Someone';
+  };
+
+  const sendSupportAlert = (contact) => {
+    const userName = getUserName();
+    const message = `Hi, ${userName} wanted you to know they could use some support right now. Please consider checking in with them.`;
+
+    SendSMS.send(
+      {
+        body: message,
+        recipients: [contact.phone],
+        successTypes: ['sent', 'queued'],
+        allowAndroidSendWithoutReadPermission: true,
+      },
+      (completed, cancelled, error) => {
+        if (completed) {
+          Alert.alert('Sent', `${contact.name} has been notified.`);
+        } else if (cancelled) {
+          // User cancelled, no action needed
+        } else if (error) {
+          Alert.alert('Error', 'Failed to send message. Please try again.');
+        }
+      }
+    );
+  };
+
+  const handleNotifySupportContact = () => {
+    if (!primaryContact) {
+      Alert.alert(
+        'No Active Contact',
+        'You don\'t have an active primary support contact. Add one in Settings > Emergency Contacts.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    Alert.alert(
+      'Notify Support Contact',
+      `Send a support message to ${primaryContact.name}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Send',
+          onPress: () => sendSupportAlert(primaryContact),
+        },
+      ]
+    );
+  };
+
+  const handleCall = (phoneNumber, isEmergency = false) => {
+    if (isEmergency && primaryContact) {
+      if (notifyPreference === 'always') {
+        // Auto-notify primary contact
+        sendSupportAlert(primaryContact);
+        Linking.openURL(`tel:${phoneNumber}`);
+      } else {
+        // Ask first
+        Alert.alert(
+          'Notify Support Contact?',
+          `Would you also like to notify ${primaryContact.name}?`,
+          [
+            {
+              text: 'No, just call',
+              onPress: () => Linking.openURL(`tel:${phoneNumber}`),
+            },
+            {
+              text: 'Yes, notify them',
+              onPress: () => {
+                sendSupportAlert(primaryContact);
+                Linking.openURL(`tel:${phoneNumber}`);
+              },
+            },
+          ]
+        );
+        return;
+      }
+    } else {
+      // Opens phone dialer with number pre-filled, does NOT auto-call
+      Linking.openURL(`tel:${phoneNumber}`);
+    }
   };
 
   const handleSMS = (phoneNumber, keyword) => {
@@ -140,6 +248,23 @@ const CrisisResourcesModal = ({
                 <Text style={styles.supportMessage}>{resources.supportMessage}</Text>
               )}
 
+              {/* Notify Support Contact Button */}
+              {primaryContact && (
+                <TouchableOpacity
+                  style={styles.notifyButton}
+                  onPress={handleNotifySupportContact}
+                >
+                  <View style={styles.notifyButtonIcon}>
+                    <Icon name="people" size={24} color="#6366F1" />
+                  </View>
+                  <View style={styles.notifyButtonText}>
+                    <Text style={styles.notifyButtonTitle}>Notify my support contact</Text>
+                    <Text style={styles.notifyButtonSubtitle}>Send a message to {primaryContact.name}</Text>
+                  </View>
+                  <Icon name="chevron-forward" size={20} color="#6366F1" />
+                </TouchableOpacity>
+              )}
+
               {/* Hotlines Section */}
               <Text style={styles.sectionTitle}>Crisis Hotlines</Text>
               {resources?.hotlines
@@ -151,7 +276,7 @@ const CrisisResourcesModal = ({
                     onPress={() =>
                       hotline.type === 'text'
                         ? handleSMS(hotline.phone, hotline.smsKeyword)
-                        : handleCall(hotline.phone)
+                        : handleCall(hotline.phone, hotline.type === 'emergency')
                     }
                   >
                     <View style={[styles.resourceIcon, { backgroundColor: getColorForType(hotline.type) + '20' }]}>
@@ -289,6 +414,38 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     fontStyle: 'italic',
     lineHeight: 24,
+  },
+  notifyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+  },
+  notifyButtonIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  notifyButtonText: {
+    flex: 1,
+  },
+  notifyButtonTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4F46E5',
+  },
+  notifyButtonSubtitle: {
+    fontSize: 13,
+    color: '#6366F1',
+    marginTop: 2,
   },
   sectionTitle: {
     fontSize: 14,
