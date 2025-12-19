@@ -10,7 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
+
+const logo = require('../../assets/images/soulbloom-logo.png');
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -87,7 +90,7 @@ const LoginScreen = ({ navigation }) => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Icon name="heart-circle" size={80} color="#6366F1" />
+          <Image source={logo} style={styles.logo} resizeMode="contain" />
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.subtitle}>Sign in to continue your wellness journey</Text>
         </View>
@@ -181,6 +184,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 40,
     marginBottom: 40,
+  },
+  logo: {
+    width: 180,
+    height: 60,
   },
   title: {
     fontSize: 28,

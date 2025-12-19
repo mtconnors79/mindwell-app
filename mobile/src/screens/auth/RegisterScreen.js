@@ -10,7 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
+
+const logo = require('../../assets/images/soulbloom-logo.png');
 import auth from '@react-native-firebase/auth';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { authAPI } from '../../services/api';
@@ -107,7 +110,7 @@ const RegisterScreen = ({ navigation }) => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Icon name="person-add" size={60} color="#6366F1" />
+          <Image source={logo} style={styles.logo} resizeMode="contain" />
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Start your mental wellness journey today</Text>
         </View>
@@ -217,6 +220,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
     marginBottom: 32,
+  },
+  logo: {
+    width: 180,
+    height: 60,
   },
   title: {
     fontSize: 28,

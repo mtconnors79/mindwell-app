@@ -8,7 +8,10 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
+
+const logo = require('../../assets/images/soulbloom-logo.png');
 import Icon from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth';
 import { moodAPI, checkinAPI, mindfulnessAPI } from '../../services/api';
@@ -137,6 +140,11 @@ const HomeScreen = ({ navigation }) => {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366F1']} />
       }
     >
+      {/* Logo */}
+      <View style={styles.logoContainer}>
+        <Image source={logo} style={styles.logo} resizeMode="contain" />
+      </View>
+
       {/* Greeting Section */}
       <View style={styles.greetingSection}>
         <Text style={styles.greeting}>{getGreeting()},</Text>
@@ -295,6 +303,14 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  logo: {
+    width: 180,
+    height: 60,
   },
   loadingContainer: {
     flex: 1,
