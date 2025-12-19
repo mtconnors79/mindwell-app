@@ -1,20 +1,53 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* Import Inter font */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+/* SoulBloom Theme - Custom Colors */
+@theme {
+  /* Primary colors */
+  --color-primary: #355F5B;
+  --color-primary-50: #E8F0EF;
+  --color-primary-100: #D1E1DF;
+  --color-primary-200: #A3C3BF;
+  --color-primary-300: #75A59F;
+  --color-primary-400: #47877F;
+  --color-primary-500: #355F5B;
+  --color-primary-600: #2A4C49;
+  --color-primary-700: #203937;
+  --color-primary-800: #152624;
+  --color-primary-900: #0B1312;
+
+  /* Semantic colors */
+  --color-background: #F7F5F2;
+  --color-surface: #EFEAF6;
+  --color-card: #D8D1E6;
+  --color-text-primary: #2F3E3C;
+  --color-text-secondary: #8FA4B3;
+  --color-accent: #C6B7D8;
+  --color-success: #AFC8C5;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+
+  /* Shadows */
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  /* Font family */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
 /* Base styles */
 @layer base {
   html {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    @apply bg-background text-text-primary;
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
     margin: 0;
     min-height: 100vh;
   }
@@ -26,7 +59,8 @@
 
   /* Focus styles */
   *:focus-visible {
-    @apply outline-2 outline-offset-2 outline-primary;
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 }
 
@@ -45,11 +79,18 @@
 @layer components {
   /* Card hover animation */
   .card-hover {
-    @apply transition-all duration-200 hover:shadow-medium hover:-translate-y-0.5;
+    transition: all 0.2s;
+  }
+  .card-hover:hover {
+    box-shadow: var(--shadow-medium);
+    transform: translateY(-2px);
   }
 
   /* Gradient text */
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+    background: linear-gradient(to right, var(--color-primary), var(--color-accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
