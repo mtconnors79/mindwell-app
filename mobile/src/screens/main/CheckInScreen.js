@@ -142,18 +142,27 @@ const CheckInScreen = ({ navigation }) => {
 
       const riskLevel = checkinAnalysis?.risk_level?.toLowerCase();
       const detectedTopics = checkinAnalysis?.detected_topics;
+      const showCrisisResources = checkinAnalysis?.show_crisis_resources;
 
-      // Check for critical or high risk - show crisis modal with required acknowledgment
-      if (riskLevel === 'critical' || riskLevel === 'high') {
+      // Check for critical risk - show crisis modal with REQUIRED acknowledgment
+      if (riskLevel === 'critical') {
         setCrisisAlertMessage(
-          "We noticed you may be struggling. Here are some resources that can help. You're not alone."
+          "We're concerned about what you've shared. Please know that help is available right now. You matter."
         );
         setCrisisModalRequireAck(true);
         setShowCrisisModal(true);
+      } else if (riskLevel === 'high' || showCrisisResources) {
+        // High risk or self-harm detected - show analysis modal WITH crisis resources (dismissible)
+        setShowAnalysisModal(true);
       } else if (detectedTopics && detectedTopics.length > 0 && resourceSuggestionsEnabled) {
-        // Show contextual resource suggestion for detected topics
-        setDetectedTopic(detectedTopics[0]); // Show first detected topic
-        setShowResourceModal(true);
+        // Show contextual resource suggestion for detected topics (not self-harm, those are handled above)
+        const nonSelfHarmTopics = detectedTopics.filter(t => t.topic_id !== 'self_harm');
+        if (nonSelfHarmTopics.length > 0) {
+          setDetectedTopic(nonSelfHarmTopics[0]);
+          setShowResourceModal(true);
+        } else {
+          setShowAnalysisModal(true);
+        }
       } else {
         // Show analysis results modal for normal check-ins
         setShowAnalysisModal(true);
@@ -490,8 +499,60 @@ const CheckInScreen = ({ navigation }) => {
                 </View>
               )}
 
-              {/* Support link for negative sentiment */}
-              {(analysisResults?.sentiment?.toLowerCase() === 'negative' ||
+              {/* Prominent Crisis Resources Section for high risk */}
+              {(analysisResults?.risk_level?.toLowerCase() === 'high' ||
+                analysisResults?.show_crisis_resources) && (
+                <View style={styles.crisisResourcesSection}>
+                  <View style={styles.crisisResourcesHeader}>
+                    <Icon name="heart" size={20} color="#EF4444" />
+                    <Text style={styles.crisisResourcesTitle}>Support Resources</Text>
+                  </View>
+                  <Text style={styles.crisisResourcesMessage}>
+                    We noticed you may be going through a difficult time. These resources are here to help.
+                  </Text>
+
+                  <TouchableOpacity
+                    style={styles.crisisResourceButton}
+                    onPress={() => Linking.openURL('tel:988')}
+                  >
+                    <View style={styles.crisisResourceIcon}>
+                      <Icon name="call" size={20} color="#fff" />
+                    </View>
+                    <View style={styles.crisisResourceInfo}>
+                      <Text style={styles.crisisResourceName}>988 Suicide & Crisis Lifeline</Text>
+                      <Text style={styles.crisisResourceDesc}>Free, confidential support 24/7</Text>
+                    </View>
+                    <Icon name="chevron-forward" size={20} color="#EF4444" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.crisisResourceButton}
+                    onPress={() => Linking.openURL('sms:741741&body=HOME')}
+                  >
+                    <View style={[styles.crisisResourceIcon, { backgroundColor: '#10B981' }]}>
+                      <Icon name="chatbubble" size={20} color="#fff" />
+                    </View>
+                    <View style={styles.crisisResourceInfo}>
+                      <Text style={styles.crisisResourceName}>Crisis Text Line</Text>
+                      <Text style={styles.crisisResourceDesc}>Text HOME to 741741</Text>
+                    </View>
+                    <Icon name="chevron-forward" size={20} color="#10B981" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.crisisMoreLink}
+                    onPress={handleOpenSupport}
+                  >
+                    <Text style={styles.crisisMoreLinkText}>View all crisis resources</Text>
+                    <Icon name="arrow-forward" size={16} color="#6366F1" />
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Support link for negative sentiment (only if NOT high risk) */}
+              {!(analysisResults?.risk_level?.toLowerCase() === 'high' ||
+                analysisResults?.show_crisis_resources) &&
+               (analysisResults?.sentiment?.toLowerCase() === 'negative' ||
                 moodRating === 'terrible' || moodRating === 'not_good') && (
                 <TouchableOpacity style={styles.analysisSupportLink} onPress={handleOpenSupport}>
                   <Icon name="heart-outline" size={18} color="#6366F1" />
@@ -940,6 +1001,80 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Crisis Resources Section Styles (for high risk in analysis modal)
+  crisisResourcesSection: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  crisisResourcesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  crisisResourcesTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#991B1B',
+    marginLeft: 8,
+  },
+  crisisResourcesMessage: {
+    fontSize: 14,
+    color: '#7F1D1D',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  crisisResourceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  crisisResourceIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  crisisResourceInfo: {
+    flex: 1,
+  },
+  crisisResourceName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  crisisResourceDesc: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  crisisMoreLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+  crisisMoreLinkText: {
+    fontSize: 14,
+    color: '#6366F1',
+    fontWeight: '500',
+    marginRight: 6,
   },
   // Resource Suggestion Modal Styles
   resourceModalOverlay: {

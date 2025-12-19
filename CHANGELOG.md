@@ -2,6 +2,57 @@
 
 All notable changes to the SoulBloom app (*Grow gently, live fully*) are documented in this file.
 
+## [0.6.0] - 2025-12-19
+
+### Added
+- **Contextual Resource Prompts** - Topic detection for 8 sensitive topics
+  - Detects: domestic violence, substance abuse, eating disorders, financial stress, grief, self-harm, LGBTQ+ support, veteran support
+  - Shows gentle modal with relevant hotline (call, text, website links)
+  - "Don't show these suggestions" checkbox option
+  - "Resource Suggestions" toggle in Settings > Preferences
+- **Crisis Detection Improvements**
+  - Expanded crisis keywords: passive suicidal ideation phrases
+  - Self-harm keywords now properly trigger elevated response
+  - Differentiated high vs critical risk UI responses
+  - High risk: Analysis modal with prominent crisis resources section (dismissible)
+  - Critical risk: Crisis modal requiring acknowledgment
+- **911 Emergency Contact Notification**
+  - When calling 911 from crisis modal, prompts to notify primary contact
+  - Opens SMS composer with pre-filled support message
+  - Auto-opens phone dialer after SMS composer closes
+- **Hybrid Mood Charts** on MoodScreen
+  - Summary/Detailed toggle switch for mood and stress charts
+  - Summary view: Daily averages with tappable points
+  - Detailed view: Individual entries with timestamps and source tags
+  - Day Details Modal showing all entries for selected day
+  - Source type badges: "Check-in" (indigo) vs "Quick Mood" (pink)
+
+### Changed
+- **Simplified Check-in Flow**
+  - Removed separate "Analyze" button, keeping only "Save Check-in"
+  - Analysis Results Modal now shows after save with supportive message, sentiment, emotions, suggestions
+  - Crisis resources section embedded in modal for high-risk entries
+- Renamed "Get Help" to "Crisis Resources" in ProfileScreen
+
+### Fixed
+- **Progress/Streaks Bug** - All CheckinResponse queries were using `firebase_uid` but schema only has `user_id`
+  - Fixed 7 locations in progress.js to use `user_id: req.user.dbId`
+  - Fixed words_500 badge to use `check_in_text` instead of nonexistent `notes` field
+  - Check-in goals and streaks now work correctly
+
+## [0.5.1] - 2025-12-18
+
+### Changed
+- **Complete App Rebrand**: MindWell → SoulBloom
+  - New tagline: "Grow gently, live fully"
+  - iOS bundle identifier: com.soulbloom.app
+  - Android applicationId: com.soulbloom.app
+  - Renamed iOS folder: MindWellMobile → SoulBloom
+  - Updated all branding in app, backend, and documentation
+- Updated Firebase project to soulbloom-65208
+- Updated Google Sign-In client IDs for new Firebase project
+- Fixed password field iOS autofill interference with `textContentType="oneTimeCode"`
+
 ## [0.5.0] - 2025-12-18
 
 ### Added

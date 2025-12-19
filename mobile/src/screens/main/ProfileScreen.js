@@ -271,7 +271,7 @@ const ProfileScreen = ({ navigation }) => {
       </View>
 
       {/* App Version */}
-      <Text style={styles.version}>SoulBloom v0.5.0</Text>
+      <Text style={styles.version}>SoulBloom v0.6.0</Text>
 
       {/* Crisis Resources Modal */}
       <CrisisResourcesModal

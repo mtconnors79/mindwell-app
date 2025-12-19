@@ -27,8 +27,13 @@ Analyze the check-in and return a JSON object with the following structure:
 Risk Level Guidelines:
 - "low": Normal daily emotions, no concerning content
 - "moderate": Signs of stress, anxiety, or mild depression that could benefit from attention (stress level 6-7, negative mood)
-- "high": Significant distress, isolation, hopelessness, but no immediate danger (stress level 8-10, terrible mood)
-- "critical": Any mention of self-harm, suicide, or harming others - requires immediate attention
+- "high": Significant distress, self-harm behaviors (cutting, burning), isolation, hopelessness, but no immediate suicidal intent (stress level 8-10, terrible mood, mentions of self-harm without suicidal ideation)
+- "critical": Any mention of suicide, wanting to die, ending one's life, or harming others - requires immediate attention
+
+IMPORTANT for risk detection:
+- Self-harm behaviors (cutting, burning, scratching, hitting self) should be at least "high" risk
+- Passive suicidal ideation phrases like "don't want to be here anymore", "better off without me", "no reason to live", "can't go on", "ending it all", "not worth living" should be "critical"
+- Active suicidal ideation (suicide, kill myself, end my life, want to die) is always "critical"
 
 Consider the structured inputs:
 - Mood Rating: great (very positive), good (positive), okay (neutral), not_good (negative), terrible (very negative)
@@ -148,12 +153,25 @@ const analyzeCheckIn = async (text, structuredData = {}) => {
     const detectedTopics = detectTopics(text);
     if (detectedTopics.length > 0) {
       analysis.detected_topics = detectedTopics;
+
+      // Elevate risk level if self_harm topic detected and risk is below high
+      const hasSelfHarmTopic = detectedTopics.some(t => t.topic_id === 'self_harm');
+      if (hasSelfHarmTopic && (analysis.risk_level === 'low' || analysis.risk_level === 'moderate')) {
+        analysis.risk_level = 'high';
+        analysis.risk_indicators = [...(analysis.risk_indicators || []), 'Self-harm topic detected'];
+        analysis.show_crisis_resources = true;
+      }
     }
 
     // Add crisis resources if critical
     if (analysis.risk_level === 'critical') {
       analysis.suggestions = [...CRISIS_RESOURCES, ...analysis.suggestions];
       analysis.requires_immediate_attention = true;
+    }
+
+    // Add flag for high risk to show crisis resources in UI (but dismissible)
+    if (analysis.risk_level === 'high') {
+      analysis.show_crisis_resources = true;
     }
 
     return analysis;
@@ -199,11 +217,26 @@ const getFallbackAnalysis = (text, structuredData = {}) => {
   const { mood_rating, stress_level, selected_emotions = [] } = structuredData;
   const lowerText = (text || '').toLowerCase();
 
-  // Crisis detection keywords
-  const crisisKeywords = ['suicide', 'kill myself', 'end my life', 'want to die', 'self-harm', 'hurt myself'];
-  const hasCrisisIndicators = crisisKeywords.some(keyword => lowerText.includes(keyword));
+  // Critical crisis keywords - active suicidal ideation
+  const criticalKeywords = [
+    'suicide', 'kill myself', 'end my life', 'want to die', 'self-harm', 'hurt myself',
+    'don\'t want to be here', 'dont want to be here', 'better off without me',
+    'no reason to live', 'can\'t go on', 'cant go on', 'ending it all',
+    'not worth living', 'take my own life', 'end it all', 'kill me'
+  ];
+  const hasCriticalIndicators = criticalKeywords.some(keyword => lowerText.includes(keyword));
 
-  if (hasCrisisIndicators) {
+  // High risk keywords - self-harm behaviors without suicidal intent
+  const highRiskKeywords = [
+    'cutting', 'cut myself', 'cutting myself',
+    'burning myself', 'burn myself', 'burned myself',
+    'scratching myself', 'scratch myself',
+    'hitting myself', 'hit myself', 'punching walls',
+    'hurting myself', 'harming myself', 'self-injury'
+  ];
+  const hasHighRiskIndicators = highRiskKeywords.some(keyword => lowerText.includes(keyword));
+
+  if (hasCriticalIndicators) {
     return {
       sentiment: 'negative',
       sentiment_score: -0.9,
@@ -215,6 +248,26 @@ const getFallbackAnalysis = (text, structuredData = {}) => {
       risk_indicators: ['Crisis-related content detected'],
       supportive_message: 'I\'m concerned about what you\'ve shared. Please reach out to a crisis helpline or trusted person immediately. You matter and help is available.',
       requires_immediate_attention: true,
+      is_fallback: true
+    };
+  }
+
+  if (hasHighRiskIndicators) {
+    return {
+      sentiment: 'negative',
+      sentiment_score: -0.7,
+      emotions: [...selected_emotions, 'distressed'],
+      keywords: [],
+      themes: ['self-harm'],
+      suggestions: [
+        'Please consider reaching out to a crisis helpline: 988 Suicide & Crisis Lifeline',
+        'Text HOME to 741741 to reach the Crisis Text Line',
+        ...CRISIS_RESOURCES.slice(2) // Add the last two resources
+      ],
+      risk_level: 'high',
+      risk_indicators: ['Self-harm related content detected'],
+      supportive_message: 'I can see you\'re going through something really difficult. Your pain is valid, and there are people who want to help. Please consider reaching out to someone you trust or a crisis helpline.',
+      show_crisis_resources: true, // Flag to show crisis resources in UI
       is_fallback: true
     };
   }
@@ -293,6 +346,12 @@ const getFallbackAnalysis = (text, structuredData = {}) => {
   // Detect topics from text
   const detectedTopics = detectTopics(text);
 
+  // Check if self_harm topic detected - elevate risk if needed
+  const hasSelfHarmTopic = detectedTopics.some(t => t.topic_id === 'self_harm');
+  if (hasSelfHarmTopic && (risk_level === 'low' || risk_level === 'moderate')) {
+    risk_level = 'high';
+  }
+
   const result = {
     sentiment,
     sentiment_score: Math.round(sentiment_score * 100) / 100,
@@ -301,7 +360,7 @@ const getFallbackAnalysis = (text, structuredData = {}) => {
     themes: [],
     suggestions,
     risk_level,
-    risk_indicators: [],
+    risk_indicators: hasSelfHarmTopic ? ['Self-harm topic detected'] : [],
     supportive_message: getSupportiveMessageForContext(mood_rating, stress_level, selected_emotions),
     is_fallback: true
   };
@@ -309,6 +368,11 @@ const getFallbackAnalysis = (text, structuredData = {}) => {
   // Add detected topics if any
   if (detectedTopics.length > 0) {
     result.detected_topics = detectedTopics;
+  }
+
+  // Add flag for high risk to show crisis resources in UI
+  if (result.risk_level === 'high') {
+    result.show_crisis_resources = true;
   }
 
   return result;

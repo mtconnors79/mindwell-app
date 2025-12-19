@@ -45,12 +45,13 @@ npx react-native run-android
 
 ```
 mobile/
-├── ios/                          # iOS native code
+├── ios/SoulBloom/                # iOS native code
 ├── android/                      # Android native code
 └── src/
     ├── components/
     │   ├── BreathingExerciseModal.js  # Animated breathing exercise
-    │   └── CrisisResourcesModal.js    # Crisis support modal
+    │   ├── CrisisResourcesModal.js    # Crisis support modal with 911 flow
+    │   └── AddContactModal.js         # Emergency contact form
     ├── navigation/
     │   └── AppNavigator.js       # Tab + Stack navigation
     ├── screens/
@@ -59,13 +60,16 @@ mobile/
     │   │   └── RegisterScreen.js
     │   └── main/
     │       ├── HomeScreen.js     # Dashboard
-    │       ├── CheckInScreen.js  # Daily check-in
-    │       ├── MoodScreen.js     # My Journey trends
+    │       ├── CheckInScreen.js  # Daily check-in with analysis modal
+    │       ├── MoodScreen.js     # My Journey with hybrid charts
     │       ├── MindfulnessScreen.js  # Activity library
     │       ├── ProgressScreen.js     # Achievements
-    │       └── ProfileScreen.js      # Settings
+    │       ├── ProfileScreen.js      # User profile
+    │       ├── SettingsScreen.js     # Reminders, preferences, about
+    │       └── EmergencyContactsScreen.js  # Contact management
     └── services/
-        └── api.js                # API client with interceptors
+        ├── api.js                # API client with interceptors
+        └── notificationService.js # Local notification handling
 ```
 
 ## Screens & Navigation
@@ -96,12 +100,22 @@ mobile/
 - Stress level slider (1-10)
 - Emotion tag multi-select (8 emotions)
 - Free-form text input (2000 char limit)
-- AI analysis preview before saving
-- Crisis resources auto-display for high-risk entries
+- Single "Save Check-in" button (auto-analyzes on save)
+- **Analysis Results Modal** after save:
+  - Supportive message, sentiment badge, detected emotions
+  - Wellness suggestions
+  - Crisis resources section for high-risk (988 + Crisis Text Line)
+- **Contextual Resource Modal** for detected topics (8 topics)
+- Crisis modal with required ack for critical risk
 
 #### MoodScreen (My Journey)
 - Time range filter (7 days, 30 days, 90 days)
-- Mood trend line chart
+- **Hybrid Mood Chart** with Summary/Detailed toggle:
+  - Summary: Daily averages, tappable points
+  - Detailed: Individual entries with timestamps
+- **Day Details Modal** showing all entries for a day
+- Source type tags (Check-in vs Quick Mood)
+- Stress level trend chart with same toggle
 - Sentiment distribution breakdown
 - Check-in history list
 - Stats summary (total entries, average, trend)
@@ -122,9 +136,23 @@ mobile/
 - Congratulations modal for new badges
 
 #### ProfileScreen
-- User info display
-- Crisis resources access button
+- User info display (name, email, avatar)
+- Account section: Display name, email
+- Support section: Crisis Resources button, Contact Support
+- App section: Settings, version info
 - Logout functionality
+
+#### SettingsScreen (Stack)
+- **Reminders**: Daily check-in time picker, custom reminders
+- **Preferences**: Resource suggestions toggle
+- **Display**: Theme options
+- **About**: App version, tagline, links
+
+#### EmergencyContactsScreen (Stack)
+- List of emergency contacts with status indicators
+- Add/Edit contact modal with SMS confirmation toggle
+- Primary contact designation
+- Confirmation status: pending, confirmed, declined
 
 ## Components
 
@@ -138,10 +166,15 @@ Full-screen modal with animated breathing guide:
 
 ### CrisisResourcesModal
 Support resources display:
-- Hotline numbers with tap-to-call
-- Crisis text line info
-- Acknowledgment requirement for high-risk
-- Custom alert messages
+- Hotline numbers with tap-to-call (988, Crisis Text Line, 911)
+- **911 Notification Flow**:
+  - Checks for primary emergency contact
+  - Prompts "Notify [contact]?" before calling
+  - Opens SMS composer with pre-filled support message
+  - Auto-opens phone dialer after SMS closes
+- "Notify my support contact" button for manual alerts
+- Acknowledgment requirement for critical-risk entries
+- Custom alert messages for triggered displays
 
 ## API Service
 

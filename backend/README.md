@@ -74,8 +74,10 @@ backend/
 │   ├── profile.js            # /api/profile/*
 │   ├── emergencyContact.js   # /api/emergency-contacts/*
 │   └── notification.js       # /api/notifications/*
+├── data/
+│   └── topicResources.js     # Topic detection patterns & resources
 ├── services/
-│   ├── sentimentService.js   # Claude AI integration
+│   ├── sentimentService.js   # Claude AI + topic detection + risk assessment
 │   └── notificationService.js # FCM push notifications
 ├── index.js                  # Server entry point
 └── package.json
@@ -154,6 +156,29 @@ backend/
 - `guided_meditations` - UCLA Mindful links
 - `sleep` - Sleep Breathing, Sleep Body Scan
 
+## Sentiment Analysis & Risk Detection
+
+The `sentimentService.js` provides:
+
+### Risk Levels
+| Level | Trigger | UI Response |
+|-------|---------|-------------|
+| `low` | Normal content | Analysis modal |
+| `moderate` | Stress 6-7, negative mood | Analysis modal |
+| `high` | Self-harm behaviors, stress 8+, terrible mood | Analysis modal + crisis resources |
+| `critical` | Suicide mentions, passive suicidal ideation | Crisis modal (required ack) |
+
+### Topic Detection
+Detects 8 sensitive topics with keyword matching:
+- `domestic_violence` → National DV Hotline
+- `substance_abuse` → SAMHSA Helpline
+- `eating_disorder` → NEDA
+- `financial_stress` → 211 Resources
+- `grief` → GriefShare
+- `self_harm` → Crisis Text Line (elevates to high risk)
+- `lgbtq_support` → Trevor Project
+- `veteran_support` → Veterans Crisis Line
+
 ### Progress (`/api/progress`)
 
 | Method | Endpoint | Auth | Description |
@@ -194,8 +219,12 @@ backend/
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/` | JWT | Create contact |
+| POST | `/` | JWT | Create contact (returns SMS template) |
 | GET | `/` | JWT | List all contacts |
+| GET | `/primary` | JWT | Get active primary contact |
+| GET | `/confirm/:token` | Public | HTML consent page |
+| POST | `/confirm/:token` | Public | Accept/decline confirmation |
+| POST | `/:id/resend` | JWT | Resend confirmation SMS |
 | GET | `/:id` | JWT | Get contact |
 | PUT | `/:id` | JWT | Update contact |
 | DELETE | `/:id` | JWT | Delete contact |
@@ -261,10 +290,11 @@ The middleware automatically detects token type and validates accordingly.
 ### MongoDB Collections
 
 **checkinresponses**
-- `firebase_uid`, `mood_rating`, `stress_level`, `selected_emotions`, `check_in_text`, `ai_analysis`, `created_at`
+- `user_id` (PostgreSQL user ID), `mood_rating`, `stress_level`, `selected_emotions`, `check_in_text`, `ai_analysis`, `created_at`
+- `ai_analysis` includes: `sentiment`, `risk_level`, `emotions`, `suggestions`, `supportive_message`, `detected_topics`, `show_crisis_resources`
 
 **activitylogs**
-- `firebase_uid`, `activity_type`, `duration_minutes`, `notes`, `created_at`
+- `user_id`, `activity_type`, `duration_minutes`, `notes`, `created_at`
 
 ## Environment Variables
 

@@ -9,8 +9,11 @@ A comprehensive mental health tracking and wellness application built with React
 ### Daily Check-In with AI Analysis
 - Structured check-in flow with mood rating, stress level slider, and emotion tags
 - Free-form journaling with AI-powered sentiment analysis via Claude
-- Personalized supportive messages and suggestions based on entries
-- Risk level assessment for proactive mental health support
+- **Analysis Results Modal** after save with:
+  - Supportive message, detected emotions, wellness suggestions
+  - Prominent crisis resources for high-risk entries (dismissible)
+- Risk level assessment: low, moderate, high, critical
+- Topic detection for contextual resource suggestions
 
 ### Quick Mood Logging
 - One-tap mood logging from the home screen
@@ -18,9 +21,13 @@ A comprehensive mental health tracking and wellness application built with React
 - Instant mood tracking without full check-in flow
 
 ### My Journey - Mood Trends & Visualization
-- Weekly and monthly mood trend charts
+- **Hybrid Mood Charts** with Summary/Detailed toggle:
+  - Summary view: Daily averages, tappable points to see day's entries
+  - Detailed view: Individual entries with timestamps, source type tags
+- **Day Details Modal**: Shows all entries for selected day with emoji, source tag
+- Stress level trend chart with same toggle functionality
 - Sentiment distribution breakdown
-- Check-in history with date range filtering
+- Check-in history with date range filtering (7/30/90 days)
 - Track emotional patterns over time
 
 ### Mindfulness Activity Library
@@ -38,17 +45,25 @@ A comprehensive mental health tracking and wellness application built with React
 - **Weekly Challenges**: Complete curated challenges like "Daily Calm" and "Mood Awareness"
 - Congratulations modal when unlocking new achievements
 
-### Crisis Resources (3 Access Points)
-- Automatic display for high-risk check-ins with required acknowledgment
-- "Need support?" link shown for negative sentiment entries
-- Manual access via Profile screen
-- Includes National Suicide Prevention Lifeline, Crisis Text Line, and more
+### Crisis Resources & Support System
+- **Critical Risk Detection**: Required acknowledgment modal for suicide/self-harm mentions
+- **High Risk Support**: Dismissible modal with prominent 988/Crisis Text Line buttons
+- **Contextual Resource Prompts**: Topic detection for 8 sensitive topics with relevant hotlines
+  - Domestic violence, substance abuse, eating disorders, financial stress
+  - Grief, self-harm, LGBTQ+ support, veteran support
+- **Subtle Support Link**: "Need support?" shown for negative sentiment entries
+- **Manual Access**: Crisis resources via Profile screen
+- **Settings Toggle**: "Resource Suggestions" preference in Settings
 
 ### Emergency Contacts with Consent Flow
 - Add support contacts with SMS confirmation workflow
 - 14-day token expiration with resend capability
 - HTML consent page explaining contact responsibilities
-- Optional 911 notification to primary contact
+- **911 Notification Flow**: When calling 911 from crisis modal:
+  - Prompts to notify primary emergency contact via SMS
+  - Auto-opens phone dialer after SMS composer closes
+  - Pre-filled message: "[Name] may be going through a difficult time..."
+- Manual "Notify my support contact" button in crisis modal
 
 ### Scheduled Reminders
 - Daily check-in reminder with customizable time
@@ -86,13 +101,15 @@ soulbloom-app/
 ├── backend/                 # Node.js API server
 │   ├── config/             # Database and Firebase configuration
 │   ├── controllers/        # Request handlers
+│   ├── data/               # Static data (topic patterns, resources)
 │   ├── middleware/         # Auth, rate limiting, error handling
 │   ├── models/             # Sequelize and Mongoose models
 │   ├── routes/             # API route definitions
+│   ├── services/           # Business logic (sentiment, notifications)
 │   └── index.js            # Server entry point
 │
 ├── mobile/                  # React Native app
-│   ├── ios/                # iOS native code
+│   ├── ios/SoulBloom/      # iOS native code
 │   ├── android/            # Android native code
 │   └── src/
 │       ├── components/     # Reusable UI components
