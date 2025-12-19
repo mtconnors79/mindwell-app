@@ -15,6 +15,7 @@ import {
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { moodAPI, checkinAPI } from '../../services/api';
+import { colors } from '../../theme/colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -935,13 +936,13 @@ const MoodScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     padding: 16,
@@ -949,7 +950,7 @@ const styles = StyleSheet.create({
   },
   timeframeContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 4,
     marginBottom: 16,
@@ -966,15 +967,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   timeframeButtonActive: {
-    backgroundColor: '#6366F1',
+    backgroundColor: colors.primary,
   },
   timeframeText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   timeframeTextActive: {
-    color: '#fff',
+    color: colors.white,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -983,7 +984,7 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
@@ -998,7 +999,7 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 11,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginBottom: 4,
   },
   summaryValue: {
@@ -1007,11 +1008,11 @@ const styles = StyleSheet.create({
   },
   summarySubtext: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   chartCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -1034,7 +1035,7 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
     marginLeft: 8,
   },
   viewToggle: {
@@ -1043,7 +1044,7 @@ const styles = StyleSheet.create({
   },
   viewToggleLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginRight: 6,
   },
   switch: {

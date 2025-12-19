@@ -17,6 +17,7 @@ const logo = require('../../assets/images/soulbloom-logo.png');
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { colors } from '../../theme/colors';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -174,7 +175,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -192,12 +193,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1F2937',
+    color: colors.textPrimary,
     marginTop: 16,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -207,12 +208,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     paddingHorizontal: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
   },
   inputIcon: {
     marginRight: 12,
@@ -221,10 +222,10 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 52,
     fontSize: 16,
-    color: '#1F2937',
+    color: colors.textPrimary,
   },
   loginButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     height: 52,
     justifyContent: 'center',
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   loginButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -247,10 +248,10 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.divider,
   },
   dividerText: {
-    color: '#6B7280',
+    color: colors.textSecondary,
     paddingHorizontal: 16,
     fontSize: 14,
   },
@@ -258,14 +259,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     height: 52,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
   },
   googleButtonText: {
-    color: '#1F2937',
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: '500',
     marginLeft: 12,
@@ -276,11 +277,11 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   footerText: {
-    color: '#6B7280',
+    color: colors.textSecondary,
     fontSize: 14,
   },
   footerLink: {
-    color: '#6366F1',
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },

@@ -13,6 +13,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
 import { progressAPI } from '../../services/api';
+import { colors } from '../../theme/colors';
 
 // Badge icon mapping
 const BADGE_ICONS = {
@@ -318,10 +319,10 @@ const ProgressScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.Create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -333,15 +334,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.background,
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   section: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -354,12 +355,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginBottom: 16,
   },
   goalsContainer: {
@@ -397,10 +398,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 12,
     fontWeight: '600',
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   goalLabelCompleted: {
-    color: '#10B981',
+    color: colors.success,
   },
   allCompleteMessage: {
     flexDirection: 'row',
@@ -448,7 +449,7 @@ const styles = StyleSheet.create({
   },
   challengeItem: {
     padding: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background,
     borderRadius: 12,
     marginBottom: 12,
   },
@@ -461,11 +462,11 @@ const styles = StyleSheet.create({
   challengeName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
   },
   challengeDescription: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginBottom: 12,
   },
   challengeProgressContainer: {
@@ -481,16 +482,16 @@ const styles = StyleSheet.create({
   },
   challengeProgressFill: {
     height: '100%',
-    backgroundColor: '#6366F1',
+    backgroundColor: colors.primary,
     borderRadius: 4,
   },
   challengeProgressComplete: {
-    backgroundColor: '#10B981',
+    backgroundColor: colors.success,
   },
   challengeProgressText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
+    color: colors.textSecondary,
     minWidth: 40,
     textAlign: 'right',
   },
@@ -517,16 +518,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   badgeIconUnlocked: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.accent,
   },
   badgeName: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
     textAlign: 'center',
   },
   badgeNameLocked: {
-    color: '#9CA3AF',
+    color: colors.textSecondary,
   },
   badgeCheck: {
     position: 'absolute',
@@ -544,7 +545,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   congratsModal: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 32,
     alignItems: 'center',
@@ -555,7 +556,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -563,30 +564,30 @@ const styles = StyleSheet.create({
   congratsTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1F2937',
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   congratsBadgeName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#6366F1',
+    color: colors.primary,
     marginBottom: 8,
   },
   congratsDescription: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
   },
   congratsButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: colors.primary,
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
     width: '100%',
   },
   congratsButtonText: {
-    color: '#FFFFFF',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',

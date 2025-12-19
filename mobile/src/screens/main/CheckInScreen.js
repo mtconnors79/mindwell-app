@@ -18,6 +18,7 @@ import Slider from '@react-native-community/slider';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { checkinAPI, progressAPI } from '../../services/api';
 import CrisisResourcesModal from '../../components/CrisisResourcesModal';
+import { colors } from '../../theme/colors';
 
 const RESOURCE_SUGGESTIONS_KEY = '@soulbloom_resource_suggestions';
 
@@ -285,7 +286,7 @@ const CheckInScreen = ({ navigation }) => {
       >
         {/* Prompt Card */}
         <View style={styles.promptCard}>
-          <Icon name="chatbubble-ellipses" size={24} color="#6366F1" />
+          <Icon name="chatbubble-ellipses" size={24} color={colors.primary} />
           <Text style={styles.promptText}>{currentPrompt}</Text>
         </View>
 
@@ -683,14 +684,14 @@ const CheckInScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 32,
   },
   promptCard: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.accent,
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -700,7 +701,7 @@ const styles = StyleSheet.create({
   promptText: {
     flex: 1,
     fontSize: 16,
-    color: '#4F46E5',
+    color: colors.primary,
     marginLeft: 12,
     fontWeight: '500',
   },
@@ -710,12 +711,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
     marginBottom: 12,
   },
   sectionSubtitle: {
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginTop: -8,
     marginBottom: 12,
   },
@@ -729,8 +730,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#fff',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     flex: 1,
     marginHorizontal: 3,
   },
@@ -740,7 +741,7 @@ const styles = StyleSheet.create({
   },
   moodLabel: {
     fontSize: 11,
-    color: '#6B7280',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   stressHeader: {
@@ -761,7 +762,7 @@ const styles = StyleSheet.create({
   sliderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     shadowColor: '#000',
@@ -777,7 +778,7 @@ const styles = StyleSheet.create({
   },
   sliderLabel: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   emotionTagsContainer: {
@@ -792,12 +793,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#fff',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   emotionTagSelected: {
-    backgroundColor: '#6366F1',
-    borderColor: '#6366F1',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   emotionEmoji: {
     fontSize: 16,
@@ -805,14 +806,14 @@ const styles = StyleSheet.create({
   },
   emotionLabel: {
     fontSize: 14,
-    color: '#4B5563',
+    color: colors.textPrimary,
   },
   emotionLabelSelected: {
-    color: '#fff',
+    color: colors.white,
     fontWeight: '500',
   },
   inputContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     minHeight: 120,
@@ -825,13 +826,13 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 16,
-    color: '#1F2937',
+    color: colors.textPrimary,
     lineHeight: 24,
     minHeight: 80,
   },
   charCount: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: colors.textSecondary,
     textAlign: 'right',
     marginTop: 8,
   },
@@ -839,13 +840,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6366F1',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     marginBottom: 16,
   },
   submitButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
@@ -860,7 +861,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   analysisModalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -877,12 +878,12 @@ const styles = StyleSheet.create({
   analysisModalTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1F2937',
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   analysisModalSubtitle: {
     fontSize: 15,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   analysisModalScroll: {
     marginBottom: 16,
@@ -909,14 +910,14 @@ const styles = StyleSheet.create({
   },
   analysisMetricItem: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
   },
   analysisMetricLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginBottom: 6,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -937,7 +938,7 @@ const styles = StyleSheet.create({
   analysisSectionLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
     marginBottom: 10,
   },
   analysisEmotionTags: {
@@ -946,14 +947,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   analysisEmotionTag: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.accent,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
   },
   analysisEmotionText: {
     fontSize: 13,
-    color: '#4F46E5',
+    color: colors.primary,
     fontWeight: '500',
     textTransform: 'capitalize',
   },
@@ -979,7 +980,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.accent,
     borderRadius: 12,
     padding: 14,
     marginTop: 4,
@@ -987,18 +988,18 @@ const styles = StyleSheet.create({
   analysisSupportLinkText: {
     flex: 1,
     fontSize: 14,
-    color: '#6366F1',
+    color: colors.primary,
     fontWeight: '500',
     marginLeft: 8,
   },
   analysisDoneButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
   analysisDoneButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -1056,12 +1057,12 @@ const styles = StyleSheet.create({
   crisisResourceName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
     marginBottom: 2,
   },
   crisisResourceDesc: {
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   crisisMoreLink: {
     flexDirection: 'row',
@@ -1072,7 +1073,7 @@ const styles = StyleSheet.create({
   },
   crisisMoreLinkText: {
     fontSize: 14,
-    color: '#6366F1',
+    color: colors.primary,
     fontWeight: '500',
     marginRight: 6,
   },
@@ -1083,7 +1084,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   resourceModalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -1097,7 +1098,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FDF2F8',
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -1105,21 +1106,21 @@ const styles = StyleSheet.create({
   resourceModalTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
   },
   resourceModalMessage: {
     fontSize: 15,
-    color: '#4B5563',
+    color: colors.textPrimary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 20,
   },
   resourceModalTopic: {
     fontWeight: '600',
-    color: '#6366F1',
+    color: colors.primary,
   },
   resourceCard: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background,
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
@@ -1127,12 +1128,12 @@ const styles = StyleSheet.create({
   resourceName: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
     marginBottom: 6,
   },
   resourceDescription: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: 16,
   },
@@ -1143,22 +1144,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6366F1',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     gap: 8,
   },
   resourceActionSecondary: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.accent,
   },
   resourceActionText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.white,
   },
   resourceActionTextSecondary: {
-    color: '#6366F1',
+    color: colors.primary,
   },
   resourceLinkButton: {
     flexDirection: 'row',
@@ -1169,7 +1170,7 @@ const styles = StyleSheet.create({
   },
   resourceLinkText: {
     fontSize: 14,
-    color: '#6366F1',
+    color: colors.primary,
     fontWeight: '500',
   },
   dontShowContainer: {
@@ -1183,18 +1184,18 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
   },
   checkboxChecked: {
-    backgroundColor: '#6366F1',
-    borderColor: '#6366F1',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   dontShowText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   resourceDismissButton: {
     alignItems: 'center',
@@ -1202,7 +1203,7 @@ const styles = StyleSheet.create({
   },
   resourceDismissText: {
     fontSize: 15,
-    color: '#9CA3AF',
+    color: colors.textSecondary,
     fontWeight: '500',
   },
 });

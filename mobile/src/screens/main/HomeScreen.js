@@ -15,6 +15,7 @@ const logo = require('../../assets/images/soulbloom-logo.png');
 import Icon from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth';
 import { moodAPI, checkinAPI, mindfulnessAPI } from '../../services/api';
+import { colors } from '../../theme/colors';
 
 const QUICK_MOOD_OPTIONS = [
   { emoji: '😄', label: 'great', score: 1.0, color: '#10B981' },
@@ -127,7 +128,7 @@ const HomeScreen = ({ navigation }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366F1" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -137,7 +138,7 @@ const HomeScreen = ({ navigation }) => {
       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366F1']} />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
       }
     >
       {/* Logo */}
@@ -167,7 +168,7 @@ const HomeScreen = ({ navigation }) => {
           ))}
         </View>
         {quickMoodLoading && (
-          <ActivityIndicator size="small" color="#6366F1" style={styles.quickMoodLoader} />
+          <ActivityIndicator size="small" color={colors.primary} style={styles.quickMoodLoader} />
         )}
       </View>
 
@@ -178,7 +179,7 @@ const HomeScreen = ({ navigation }) => {
           onPress={() => navigation.navigate('Mindfulness')}
         >
           <View style={styles.suggestedHeader}>
-            <Icon name="leaf" size={20} color="#10B981" />
+            <Icon name="leaf" size={20} color={colors.success} />
             <Text style={styles.suggestedLabel}>Suggested Activity</Text>
           </View>
           <Text style={styles.suggestedTitle}>{suggestedActivity.activity?.name}</Text>
@@ -198,7 +199,7 @@ const HomeScreen = ({ navigation }) => {
       {/* Mood Summary Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Icon name="analytics" size={24} color="#6366F1" />
+          <Icon name="analytics" size={24} color={colors.primary} />
           <Text style={styles.cardTitle}>Your Week</Text>
         </View>
         {moodStats ? (
@@ -231,7 +232,7 @@ const HomeScreen = ({ navigation }) => {
       {/* Recent Check-in Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Icon name="create" size={24} color="#6366F1" />
+          <Icon name="create" size={24} color={colors.primary} />
           <Text style={styles.cardTitle}>Latest Check-in</Text>
         </View>
         {recentCheckin ? (
@@ -262,32 +263,32 @@ const HomeScreen = ({ navigation }) => {
         <QuickActionButton
           icon="create-outline"
           label="Daily Check-In"
-          color="#6366F1"
+          color={colors.primary}
           onPress={() => navigation.navigate('CheckIn')}
         />
         <QuickActionButton
           icon="analytics-outline"
           label="My Journey"
-          color="#10B981"
+          color={colors.success}
           onPress={() => navigation.navigate('Mood')}
         />
         <QuickActionButton
           icon="trophy-outline"
           label="Progress"
-          color="#8B5CF6"
+          color={colors.secondary}
           onPress={() => navigation.navigate('Progress')}
         />
         <QuickActionButton
           icon="call-outline"
           label="Contacts"
-          color="#EF4444"
+          color={colors.error}
           onPress={() => {}}
         />
       </View>
 
       {/* Motivational Quote */}
       <View style={styles.quoteCard}>
-        <Icon name="sparkles" size={20} color="#6366F1" />
+        <Icon name="sparkles" size={20} color={colors.primary} />
         <Text style={styles.quoteText}>
           "Every day is a new opportunity to take care of your mental health."
         </Text>
@@ -299,7 +300,7 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background,
   },
   content: {
     padding: 16,
@@ -316,22 +317,22 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background,
   },
   greetingSection: {
     marginBottom: 16,
   },
   greeting: {
     fontSize: 16,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   userName: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1F2937',
+    color: colors.textPrimary,
   },
   quickMoodCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -344,7 +345,7 @@ const styles = StyleSheet.create({
   quickMoodTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -357,7 +358,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -419,7 +420,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -437,7 +438,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
     marginLeft: 8,
   },
   moodSummary: {
@@ -461,11 +462,11 @@ const styles = StyleSheet.create({
   },
   moodDetailText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   moodTrend: {
     fontSize: 14,
-    color: '#6366F1',
+    color: colors.primary,
     marginTop: 4,
     textTransform: 'capitalize',
   },
@@ -475,11 +476,11 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: colors.textSecondary,
     marginTop: 4,
   },
   checkinContent: {
@@ -487,16 +488,16 @@ const styles = StyleSheet.create({
   },
   checkinDate: {
     fontSize: 12,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   checkinText: {
     fontSize: 15,
-    color: '#374151',
+    color: colors.textPrimary,
     lineHeight: 22,
   },
   sentimentBadge: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.accent,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -505,7 +506,7 @@ const styles = StyleSheet.create({
   },
   sentimentText: {
     fontSize: 12,
-    color: '#6366F1',
+    color: colors.primary,
     textTransform: 'capitalize',
   },
   emptyCheckin: {
@@ -515,7 +516,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
     marginBottom: 12,
     marginTop: 8,
   },
@@ -533,13 +534,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   actionButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 14,
     fontWeight: '600',
     marginTop: 8,
   },
   quoteCard: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.accent,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
@@ -549,7 +550,7 @@ const styles = StyleSheet.create({
   quoteText: {
     flex: 1,
     fontSize: 14,
-    color: '#4F46E5',
+    color: colors.primary,
     fontStyle: 'italic',
     marginLeft: 12,
     lineHeight: 20,

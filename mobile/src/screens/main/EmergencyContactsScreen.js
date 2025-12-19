@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import SendSMS from 'react-native-sms';
 import { emergencyContactAPI } from '../../services/api';
 import AddContactModal from '../../components/AddContactModal';
+import { colors } from '../../theme/colors';
 
 const NOTIFY_PREFERENCE_KEY = '@soulbloom_notify_preference';
 
@@ -360,13 +361,13 @@ const EmergencyContactsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -399,7 +400,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -407,12 +408,12 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#6366F1',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   emptyState: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 32,
     alignItems: 'center',
@@ -420,12 +421,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
     marginTop: 16,
   },
   emptyText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 20,
@@ -433,7 +434,7 @@ const styles = StyleSheet.create({
   addFirstButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6366F1',
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 10,
@@ -441,7 +442,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addFirstButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -451,7 +452,7 @@ const styles = StyleSheet.create({
   contactCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
   },
@@ -469,7 +470,7 @@ const styles = StyleSheet.create({
   contactName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
     flex: 1,
   },
   statusBadge: {
@@ -484,12 +485,12 @@ const styles = StyleSheet.create({
   },
   contactRelationship: {
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginBottom: 2,
   },
   contactPhone: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: colors.textSecondary,
   },
   contactActions: {
     flexDirection: 'row',
@@ -498,11 +499,11 @@ const styles = StyleSheet.create({
   },
   resendButton: {
     padding: 8,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.accent,
     borderRadius: 8,
   },
   deleteAction: {
-    backgroundColor: '#EF4444',
+    backgroundColor: colors.error,
     justifyContent: 'center',
     alignItems: 'center',
     width: 80,
@@ -510,27 +511,27 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   settingsCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
   },
   settingsDescription: {
     fontSize: 14,
-    color: '#4B5563',
+    color: colors.textPrimary,
     lineHeight: 20,
     marginBottom: 16,
   },
   optionButton: {
     padding: 14,
     borderRadius: 10,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
   },
   optionButtonSelected: {
-    backgroundColor: '#EEF2FF',
-    borderColor: '#6366F1',
+    backgroundColor: colors.accent,
+    borderColor: colors.primary,
   },
   optionContent: {
     flexDirection: 'row',
@@ -543,11 +544,11 @@ const styles = StyleSheet.create({
   optionLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textPrimary,
   },
   optionDescription: {
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   bottomPadding: {
