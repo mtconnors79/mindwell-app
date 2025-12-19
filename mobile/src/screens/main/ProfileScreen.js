@@ -106,6 +106,10 @@ const ProfileScreen = ({ navigation }) => {
     navigation.navigate('EmergencyContacts');
   };
 
+  const handleCareCircle = () => {
+    navigation.navigate('CareCircle');
+  };
+
   const handleSupport = () => {
     Alert.alert(
       'App Support',
@@ -222,7 +226,13 @@ const ProfileScreen = ({ navigation }) => {
         <Text style={styles.sectionTitle}>Wellness</Text>
         <View style={styles.menuCard}>
           <ProfileMenuItem
-            icon="people-outline"
+            icon="people-circle-outline"
+            label="Care Circle"
+            value="Share with trusted people"
+            onPress={handleCareCircle}
+          />
+          <ProfileMenuItem
+            icon="call-outline"
             label="Emergency Contacts"
             value="Manage support contacts"
             onPress={handleEmergencyContacts}

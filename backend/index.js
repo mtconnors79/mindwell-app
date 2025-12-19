@@ -20,6 +20,7 @@ const profileRoutes = require('./routes/profile');
 const notificationRoutes = require('./routes/notification');
 const resourcesRoutes = require('./routes/resources');
 const progressRoutes = require('./routes/progress');
+const careCircleRoutes = require('./routes/careCircle');
 
 // Import error handlers
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
@@ -38,7 +39,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', generalLimiter);
 
 app.get('/', (req, res) => {
-  res.json({ message: 'MindWell API is running' });
+  res.json({ message: 'SoulBloom API is running' });
 });
 
 app.get('/health', (req, res) => {
@@ -64,6 +65,7 @@ app.use('/api/emergency-contacts', emergencyContactRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/resources', resourcesRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/care-circle', careCircleRoutes);
 
 // Error handling middleware (must be after all routes)
 app.use(notFoundHandler);

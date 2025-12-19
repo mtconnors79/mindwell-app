@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Base styles */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-text-primary;
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  /* Remove default button styles */
+  button {
+    font-family: inherit;
+  }
+
+  /* Focus styles */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom component styles */
+@layer components {
+  /* Card hover animation */
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-medium hover:-translate-y-0.5;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  }
+}

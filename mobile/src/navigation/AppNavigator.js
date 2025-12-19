@@ -18,6 +18,7 @@ import ProgressScreen from '../screens/main/ProgressScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
 import EmergencyContactsScreen from '../screens/main/EmergencyContactsScreen';
+import CareCircleScreen from '../screens/main/CareCircleScreen';
 
 const Stack = createStackNavigator();
 const MainStack = createStackNavigator();
@@ -143,6 +144,20 @@ const MainStackNavigator = () => {
           title: 'Emergency Contacts',
           headerStyle: {
             backgroundColor: '#6366F1',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
+      <MainStack.Screen
+        name="CareCircle"
+        component={CareCircleScreen}
+        options={{
+          title: 'Care Circle',
+          headerStyle: {
+            backgroundColor: '#355F5B',
           },
           headerTintColor: '#fff',
           headerTitleStyle: {
