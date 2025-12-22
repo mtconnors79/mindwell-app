@@ -25,6 +25,7 @@ import ProfileScreen from '../screens/main/ProfileScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
 import EmergencyContactsScreen from '../screens/main/EmergencyContactsScreen';
 import CareCircleScreen from '../screens/main/CareCircleScreen';
+import GoalHistoryScreen from '../screens/main/GoalHistoryScreen';
 
 const Stack = createStackNavigator();
 const MainStack = createStackNavigator();
@@ -162,6 +163,20 @@ const MainStackNavigator = () => {
         component={CareCircleScreen}
         options={{
           title: 'Care Circle',
+          headerStyle: {
+            backgroundColor: '#355F5B',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
+      <MainStack.Screen
+        name="GoalHistory"
+        component={GoalHistoryScreen}
+        options={{
+          title: 'Past Goals',
           headerStyle: {
             backgroundColor: '#355F5B',
           },

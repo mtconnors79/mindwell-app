@@ -9,11 +9,15 @@ import {
   Modal,
   TouchableOpacity,
   Animated,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { progressAPI } from '../../services/api';
+import { goalsAPI } from '../../services/goalsApi';
 import { colors } from '../../theme/colors';
+import AddGoalModal from '../../components/AddGoalModal';
+import GoalCard from '../../components/GoalCard';
 
 // Badge icon mapping
 const BADGE_ICONS = {
@@ -29,6 +33,7 @@ const BADGE_ICONS = {
 };
 
 const ProgressScreen = () => {
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [todayProgress, setTodayProgress] = useState(null);
@@ -39,25 +44,84 @@ const ProgressScreen = () => {
   const [showCongrats, setShowCongrats] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(0));
 
+  // Goals state
+  const [userGoals, setUserGoals] = useState([]);
+  const [goalsSummary, setGoalsSummary] = useState(null);
+  const [showAddGoalModal, setShowAddGoalModal] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(null);
+
   const fetchData = async () => {
     try {
-      const [todayRes, streaksRes, achievementsRes, challengesRes] = await Promise.all([
+      const [todayRes, streaksRes, achievementsRes, challengesRes, goalsRes, goalsSummaryRes] = await Promise.all([
         progressAPI.getToday(),
         progressAPI.getStreaks(),
         progressAPI.getAchievements(),
         progressAPI.getChallenges(),
+        goalsAPI.getGoals(),
+        goalsAPI.getSummary(),
       ]);
 
       setTodayProgress(todayRes.data);
       setStreaks(streaksRes.data);
       setAchievements(achievementsRes.data);
       setChallenges(challengesRes.data?.challenges || []);
+      setUserGoals(goalsRes.data?.goals || []);
+      setGoalsSummary(goalsSummaryRes.data?.summary || null);
     } catch (error) {
       console.error('Error fetching progress data:', error.message);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  const fetchGoals = async () => {
+    try {
+      const [goalsRes, summaryRes] = await Promise.all([
+        goalsAPI.getGoals(),
+        goalsAPI.getSummary(),
+      ]);
+      setUserGoals(goalsRes.data?.goals || []);
+      setGoalsSummary(summaryRes.data?.summary || null);
+    } catch (error) {
+      console.error('Error fetching goals:', error.message);
+    }
+  };
+
+  const handleGoalCreated = () => {
+    fetchGoals();
+  };
+
+  const handleEditGoal = (goal) => {
+    setEditingGoal(goal);
+    setShowAddGoalModal(true);
+  };
+
+  const handleDeleteGoal = (goal) => {
+    Alert.alert(
+      'Delete Goal',
+      `Are you sure you want to delete "${goal.title}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await goalsAPI.deleteGoal(goal.id);
+              fetchGoals();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete goal');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleCloseAddModal = () => {
+    setShowAddGoalModal(false);
+    setEditingGoal(null);
   };
 
   const checkForNewAchievements = async () => {
@@ -223,6 +287,63 @@ const ProgressScreen = () => {
           )}
         </View>
 
+        {/* My Goals Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <View>
+              <Text style={styles.sectionTitle}>My Goals</Text>
+              <Text style={styles.sectionSubtitle}>
+                {userGoals.length > 0
+                  ? `${goalsSummary?.slotsRemaining || 0} slots remaining`
+                  : 'Track your personal progress'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.addGoalButton}
+              onPress={() => setShowAddGoalModal(true)}
+            >
+              <Icon name="add" size={20} color={colors.white} />
+            </TouchableOpacity>
+          </View>
+
+          {userGoals.length === 0 ? (
+            <View style={styles.emptyGoals}>
+              <Icon name="flag-outline" size={48} color={colors.textSecondary} />
+              <Text style={styles.emptyGoalsTitle}>No goals yet</Text>
+              <Text style={styles.emptyGoalsText}>
+                Set a personal goal to track your progress
+              </Text>
+              <TouchableOpacity
+                style={styles.createGoalButton}
+                onPress={() => setShowAddGoalModal(true)}
+              >
+                <Text style={styles.createGoalButtonText}>Create Goal</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              {userGoals.map((goal) => (
+                <GoalCard
+                  key={goal.id}
+                  goal={goal}
+                  onEdit={handleEditGoal}
+                  onDelete={handleDeleteGoal}
+                />
+              ))}
+            </>
+          )}
+
+          {/* Past Goals Link */}
+          <TouchableOpacity
+            style={styles.pastGoalsLink}
+            onPress={() => navigation.navigate('GoalHistory')}
+          >
+            <Icon name="time-outline" size={18} color={colors.textSecondary} />
+            <Text style={styles.pastGoalsLinkText}>View Past Goals</Text>
+            <Icon name="chevron-forward" size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+
         {/* Current Streaks Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Current Streaks</Text>
@@ -315,6 +436,14 @@ const ProgressScreen = () => {
           </Animated.View>
         </View>
       </Modal>
+
+      {/* Add Goal Modal */}
+      <AddGoalModal
+        visible={showAddGoalModal}
+        onClose={handleCloseAddModal}
+        onGoalCreated={handleGoalCreated}
+        editGoal={editingGoal}
+      />
     </View>
   );
 };
@@ -362,6 +491,62 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     marginBottom: 16,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  addGoalButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyGoals: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  emptyGoalsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  emptyGoalsText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  createGoalButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+  },
+  createGoalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  pastGoalsLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+  },
+  pastGoalsLinkText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginHorizontal: 8,
   },
   goalsContainer: {
     flexDirection: 'row',
