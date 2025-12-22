@@ -16,6 +16,8 @@ import { LineChart, BarChart } from 'react-native-chart-kit';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { moodAPI, checkinAPI } from '../../services/api';
 import { colors } from '../../theme/colors';
+import MoodRangeBand, { calculateMoodRangeData } from '../../components/MoodRangeBand';
+import VarianceFlag, { VarianceFlagLegend, VarianceTooltip } from '../../components/VarianceFlag';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -68,6 +70,11 @@ const MoodScreen = () => {
   const [detailedStressView, setDetailedStressView] = useState(false);
   const [showDayDetailsModal, setShowDayDetailsModal] = useState(false);
   const [selectedDayData, setSelectedDayData] = useState(null);
+
+  // Detailed view sub-options
+  const [showAllEntries, setShowAllEntries] = useState(false);
+  const [showVarianceTooltip, setShowVarianceTooltip] = useState(false);
+  const [selectedVarianceDay, setSelectedVarianceDay] = useState(null);
 
   // Data states
   const [moodStats, setMoodStats] = useState(null);
@@ -303,6 +310,41 @@ const MoodScreen = () => {
     };
   }, [checkins, recentMoods]);
 
+  // Calculate mood range data for detailed view (min/max/avg per day)
+  const getMoodRangeData = useCallback(() => {
+    if (!checkins || checkins.length === 0) {
+      return [];
+    }
+    return calculateMoodRangeData(checkins, MOOD_RATING_MAP);
+  }, [checkins]);
+
+  // Get detailed view data - either range bands (default) or all entries
+  const getDetailedMoodData = useCallback(() => {
+    if (showAllEntries) {
+      // Return all individual entries
+      return getMoodTrendDataDetailed();
+    }
+
+    // Return daily averages with range data for band visualization
+    const rangeData = getMoodRangeData();
+    if (rangeData.length === 0) return null;
+
+    const labels = rangeData.map((d) => d.date);
+    const values = rangeData.map((d) => d.avg);
+
+    return {
+      labels,
+      datasets: [{ data: values }],
+      rangeData, // Include for range band rendering
+    };
+  }, [showAllEntries, getMoodTrendDataDetailed, getMoodRangeData]);
+
+  // Handle variance flag press
+  const handleVarianceFlagPress = useCallback((day) => {
+    setSelectedVarianceDay(day);
+    setShowVarianceTooltip(true);
+  }, []);
+
   // Handle tapping on a summary data point
   const handleSummaryPointTap = (dateKey) => {
     const entriesByDate = getMoodEntriesByDate();
@@ -457,7 +499,8 @@ const MoodScreen = () => {
     color: (opacity = 1) => `rgba(239, 68, 68, ${opacity})`,
   };
 
-  const moodTrendData = detailedMoodView ? getMoodTrendDataDetailed() : getMoodTrendDataSummary();
+  const moodTrendData = detailedMoodView ? getDetailedMoodData() : getMoodTrendDataSummary();
+  const rangeData = detailedMoodView && !showAllEntries ? getMoodRangeData() : [];
   const stressTrendData = detailedStressView ? getStressTrendDataDetailed() : getStressTrendDataSummary();
   const emotionChartData = getEmotionChartData();
   const avgMood = calculateAvgMood();
@@ -553,10 +596,13 @@ const MoodScreen = () => {
               <Text style={styles.chartTitle}>Combined Mood Trend</Text>
             </View>
             <View style={styles.viewToggle}>
-              <Text style={styles.viewToggleLabel}>Details</Text>
+              <Text style={styles.viewToggleLabel}>Detailed</Text>
               <Switch
                 value={detailedMoodView}
-                onValueChange={setDetailedMoodView}
+                onValueChange={(value) => {
+                  setDetailedMoodView(value);
+                  if (!value) setShowAllEntries(false); // Reset sub-toggle when disabling detailed
+                }}
                 trackColor={{ false: '#E5E7EB', true: '#C7D2FE' }}
                 thumbColor={detailedMoodView ? '#6366F1' : '#9CA3AF'}
                 style={styles.switch}
@@ -564,47 +610,100 @@ const MoodScreen = () => {
             </View>
           </View>
 
+          {/* Show All Entries sub-toggle - only visible in Detailed mode */}
+          {detailedMoodView && (
+            <View style={styles.subToggleRow}>
+              <Text style={styles.subToggleHint}>
+                {showAllEntries ? 'Showing all entries' : 'Showing daily range bands'}
+              </Text>
+              <View style={styles.viewToggle}>
+                <Text style={styles.viewToggleLabel}>All Entries</Text>
+                <Switch
+                  value={showAllEntries}
+                  onValueChange={setShowAllEntries}
+                  trackColor={{ false: '#E5E7EB', true: '#DDD6FE' }}
+                  thumbColor={showAllEntries ? '#8B5CF6' : '#9CA3AF'}
+                  style={styles.switch}
+                />
+              </View>
+            </View>
+          )}
+
           {!detailedMoodView && moodTrendData && (
             <Text style={styles.chartHint}>Tap a point to see day's entries</Text>
           )}
 
           {moodTrendData ? (
-            <TouchableOpacity
-              activeOpacity={detailedMoodView ? 1 : 0.7}
-              onPress={() => {
-                if (!detailedMoodView && moodTrendData.dateKeys) {
-                  // Show picker for which day to view (simplified: show most recent)
-                  const lastDate = moodTrendData.dateKeys[moodTrendData.dateKeys.length - 1];
-                  handleSummaryPointTap(lastDate);
-                }
-              }}
-            >
-              <LineChart
-                data={moodTrendData}
-                width={screenWidth - 48}
-                height={180}
-                chartConfig={{
-                  ...chartConfig,
-                  propsForDots: {
-                    r: detailedMoodView ? '5' : '6',
-                    strokeWidth: '2',
-                    stroke: '#6366F1',
-                  },
-                }}
-                bezier
-                style={styles.chart}
-                yAxisSuffix=""
-                yAxisInterval={1}
-                fromZero={false}
-                segments={4}
-                onDataPointClick={({ index }) => {
+            <View style={styles.chartContainer}>
+              {/* Range Band Overlay - shown in detailed mode without "All Entries" */}
+              {detailedMoodView && !showAllEntries && rangeData.length > 0 && (
+                <MoodRangeBand
+                  data={rangeData}
+                  width={screenWidth - 48}
+                  height={180}
+                  paddingLeft={64}
+                  paddingRight={16}
+                  paddingTop={16}
+                  paddingBottom={40}
+                  yMin={1}
+                  yMax={5}
+                  color="#6366F1"
+                />
+              )}
+
+              <TouchableOpacity
+                activeOpacity={detailedMoodView ? 1 : 0.7}
+                onPress={() => {
                   if (!detailedMoodView && moodTrendData.dateKeys) {
-                    const dateKey = moodTrendData.dateKeys[index];
-                    handleSummaryPointTap(dateKey);
+                    // Show picker for which day to view (simplified: show most recent)
+                    const lastDate = moodTrendData.dateKeys[moodTrendData.dateKeys.length - 1];
+                    handleSummaryPointTap(lastDate);
                   }
                 }}
-              />
-            </TouchableOpacity>
+              >
+                <LineChart
+                  data={moodTrendData}
+                  width={screenWidth - 48}
+                  height={180}
+                  chartConfig={{
+                    ...chartConfig,
+                    propsForDots: {
+                      r: detailedMoodView ? '5' : '6',
+                      strokeWidth: '2',
+                      stroke: '#6366F1',
+                    },
+                  }}
+                  bezier
+                  style={styles.chart}
+                  yAxisSuffix=""
+                  yAxisInterval={1}
+                  fromZero={false}
+                  segments={4}
+                  onDataPointClick={({ index }) => {
+                    if (!detailedMoodView && moodTrendData.dateKeys) {
+                      const dateKey = moodTrendData.dateKeys[index];
+                      handleSummaryPointTap(dateKey);
+                    }
+                  }}
+                />
+              </TouchableOpacity>
+
+              {/* Variance Flags - shown in detailed mode without "All Entries" */}
+              {detailedMoodView && !showAllEntries && rangeData.length > 0 && (
+                <VarianceFlag
+                  rangeData={rangeData}
+                  width={screenWidth - 48}
+                  height={180}
+                  paddingLeft={64}
+                  paddingRight={16}
+                  paddingTop={16}
+                  paddingBottom={40}
+                  yMin={1}
+                  yMax={5}
+                  onFlagPress={handleVarianceFlagPress}
+                />
+              )}
+            </View>
           ) : (
             <View style={styles.noDataContainer}>
               <Icon name="bar-chart-outline" size={40} color="#D1D5DB" />
@@ -614,7 +713,8 @@ const MoodScreen = () => {
 
           {/* Legend */}
           <View style={styles.chartLegend}>
-            {detailedMoodView ? (
+            {detailedMoodView && showAllEntries ? (
+              // All Entries mode: show source legend
               <>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: CHECKIN_COLOR }]} />
@@ -625,7 +725,21 @@ const MoodScreen = () => {
                   <Text style={styles.legendText}>Quick Moods</Text>
                 </View>
               </>
+            ) : detailedMoodView && !showAllEntries ? (
+              // Range Bands mode: show range and variance legend
+              <>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#6366F1', opacity: 0.3 }]} />
+                  <Text style={styles.legendText}>Daily Range</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#6366F1' }]} />
+                  <Text style={styles.legendText}>Daily Avg</Text>
+                </View>
+                <VarianceFlagLegend />
+              </>
             ) : (
+              // Summary mode: show mood scale
               <>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
@@ -929,6 +1043,16 @@ const MoodScreen = () => {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Variance Tooltip */}
+      <VarianceTooltip
+        day={selectedVarianceDay}
+        visible={showVarianceTooltip}
+        onClose={() => {
+          setShowVarianceTooltip(false);
+          setSelectedVarianceDay(null);
+        }}
+      />
     </View>
   );
 };
@@ -1055,6 +1179,24 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontStyle: 'italic',
     marginBottom: 8,
+  },
+  subToggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  subToggleHint: {
+    fontSize: 12,
+    color: '#6B7280',
+    flex: 1,
+  },
+  chartContainer: {
+    position: 'relative',
   },
   chart: {
     marginVertical: 8,
