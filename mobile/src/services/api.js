@@ -258,4 +258,11 @@ export const progressAPI = {
     api.get('/progress/challenges'),
 };
 
+export const userSettingsAPI = {
+  getSettings: () =>
+    api.get('/users/settings'),
+  updateSettings: (settings) =>
+    api.patch('/users/settings', settings),
+};
+
 export default api;

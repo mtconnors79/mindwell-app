@@ -1,5 +1,6 @@
 const { CheckinResponse } = require('../models');
 const sentimentService = require('../services/sentimentService');
+const { checkGoalAchieved } = require('../services/goalNotificationService');
 
 /**
  * Calculate time bucket from a Date object
@@ -93,6 +94,18 @@ const createCheckin = async (req, res) => {
       time_bucket: timeBucket,
       created_at: createdAt
     });
+
+    // Check goal progress for check_in and journaling (if text is long enough)
+    checkGoalAchieved(user_id, 'check_in').catch(err =>
+      console.error('Goal check failed:', err.message)
+    );
+
+    // Also check journaling goals if the check-in text is substantial (50+ chars)
+    if (check_in_text && check_in_text.length >= 50) {
+      checkGoalAchieved(user_id, 'journaling').catch(err =>
+        console.error('Journaling goal check failed:', err.message)
+      );
+    }
 
     res.status(201).json({
       message: 'Check-in created successfully',

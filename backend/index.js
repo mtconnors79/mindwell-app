@@ -22,12 +22,16 @@ const resourcesRoutes = require('./routes/resources');
 const progressRoutes = require('./routes/progress');
 const careCircleRoutes = require('./routes/careCircle');
 const goalsRoutes = require('./routes/goals');
+const userSettingsRoutes = require('./routes/userSettings');
 
 // Import error handlers
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 // Import rate limiters
 const { generalLimiter } = require('./middleware/rateLimiter');
+
+// Import cron jobs
+const { initializeCronJobs, stopAllCronJobs } = require('./jobs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -68,6 +72,7 @@ app.use('/api/resources', resourcesRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/care-circle', careCircleRoutes);
 app.use('/api/goals', goalsRoutes);
+app.use('/api/users/settings', userSettingsRoutes);
 
 // Error handling middleware (must be after all routes)
 app.use(notFoundHandler);
@@ -87,6 +92,9 @@ const startServer = async () => {
     // Start Express server
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
+
+      // Initialize cron jobs after server is listening
+      initializeCronJobs();
     });
   } catch (error) {
     console.error('Failed to start server:', error.message);
@@ -98,6 +106,9 @@ const startServer = async () => {
 const shutdown = async (signal) => {
   console.log(`\n${signal} received. Shutting down gracefully...`);
   try {
+    // Stop cron jobs first
+    stopAllCronJobs();
+
     await disconnectSequelize();
     await disconnectMongoDB();
     console.log('All connections closed. Exiting.');

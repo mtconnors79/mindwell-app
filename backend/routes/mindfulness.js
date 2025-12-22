@@ -3,6 +3,7 @@ const router = express.Router();
 const { Op } = require('sequelize');
 const { authenticateAndLoadUser } = require('../middleware/auth');
 const { ActivityCompletion } = require('../models');
+const { checkGoalAchieved } = require('../services/goalNotificationService');
 
 // Hardcoded mindfulness activities
 const MINDFULNESS_ACTIVITIES = {
@@ -294,6 +295,13 @@ router.post('/:activityId/complete', async (req, res) => {
       activity_id: activityId,
       completed_at: new Date()
     });
+
+    // Check goal progress - determine type based on activity category
+    const isBreaathing = activityId.startsWith('breathing-');
+    const goalType = isBreaathing ? 'breathing' : 'mindfulness';
+    checkGoalAchieved(user_id, goalType).catch(err =>
+      console.error(`${goalType} goal check failed:`, err.message)
+    );
 
     // Get updated stats
     const stats = await getStreakStats(user_id);

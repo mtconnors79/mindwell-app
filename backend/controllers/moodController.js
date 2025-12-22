@@ -1,5 +1,6 @@
 const { MoodEntry } = require('../models');
 const { Op } = require('sequelize');
+const { checkGoalAchieved } = require('../services/goalNotificationService');
 
 const createMoodEntry = async (req, res) => {
   try {
@@ -19,6 +20,11 @@ const createMoodEntry = async (req, res) => {
       sentiment_label,
       check_in_date
     });
+
+    // Check goal progress for quick_mood
+    checkGoalAchieved(user_id, 'quick_mood').catch(err =>
+      console.error('Quick mood goal check failed:', err.message)
+    );
 
     res.status(201).json({
       message: 'Mood entry created successfully',

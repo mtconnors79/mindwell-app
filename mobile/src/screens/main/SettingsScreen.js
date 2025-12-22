@@ -15,6 +15,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AddReminderModal from '../../components/AddReminderModal';
 import { colors } from '../../theme/colors';
+import { userSettingsAPI } from '../../services/api';
+import { goalsAPI } from '../../services/goalsApi';
 import {
   requestNotificationPermission,
   checkNotificationPermission,
@@ -60,6 +62,13 @@ const SettingsScreen = ({ navigation }) => {
   });
   const [showBucketTimePicker, setShowBucketTimePicker] = useState(null); // 'morning' | 'afternoon' | 'evening' | null
 
+  // Goal Settings State
+  const [goalNotifyAchieved, setGoalNotifyAchieved] = useState(true);
+  const [goalNotifyExpiring, setGoalNotifyExpiring] = useState(true);
+  const [goalNotifyIncomplete, setGoalNotifyIncomplete] = useState(true);
+  const [goalHistoryRetention, setGoalHistoryRetention] = useState(90);
+  const [showRetentionPicker, setShowRetentionPicker] = useState(false);
+
   // Load settings on mount
   useEffect(() => {
     loadSettings();
@@ -98,6 +107,18 @@ const SettingsScreen = ({ navigation }) => {
     setMultiCheckinEnabled(multiSettings.enabled);
     setMultiCheckinFrequency(multiSettings.frequency);
     setTimeBuckets(multiSettings.timeBuckets);
+
+    // Load goal settings from backend
+    try {
+      const response = await userSettingsAPI.getSettings();
+      const settings = response.data.settings;
+      setGoalNotifyAchieved(settings.goal_notify_achieved);
+      setGoalNotifyExpiring(settings.goal_notify_expiring);
+      setGoalNotifyIncomplete(settings.goal_notify_incomplete);
+      setGoalHistoryRetention(settings.goal_history_retention_days);
+    } catch (error) {
+      console.log('Error loading goal settings:', error.message);
+    }
   };
 
   const handleResourceSuggestionsToggle = async (value) => {
@@ -397,6 +418,78 @@ const SettingsScreen = ({ navigation }) => {
     } else {
       await cancelNotification(reminder.id);
     }
+  };
+
+  // Goal settings handlers
+  const handleGoalNotifyAchievedToggle = async (value) => {
+    setGoalNotifyAchieved(value);
+    try {
+      await userSettingsAPI.updateSettings({ goal_notify_achieved: value });
+    } catch (error) {
+      console.log('Error saving goal achieved setting:', error.message);
+      setGoalNotifyAchieved(!value); // Revert on error
+    }
+  };
+
+  const handleGoalNotifyExpiringToggle = async (value) => {
+    setGoalNotifyExpiring(value);
+    try {
+      await userSettingsAPI.updateSettings({ goal_notify_expiring: value });
+    } catch (error) {
+      console.log('Error saving goal expiring setting:', error.message);
+      setGoalNotifyExpiring(!value);
+    }
+  };
+
+  const handleGoalNotifyIncompleteToggle = async (value) => {
+    setGoalNotifyIncomplete(value);
+    try {
+      await userSettingsAPI.updateSettings({ goal_notify_incomplete: value });
+    } catch (error) {
+      console.log('Error saving goal incomplete setting:', error.message);
+      setGoalNotifyIncomplete(!value);
+    }
+  };
+
+  const handleRetentionChange = async (days) => {
+    setGoalHistoryRetention(days);
+    setShowRetentionPicker(false);
+    try {
+      await userSettingsAPI.updateSettings({ goal_history_retention_days: days });
+    } catch (error) {
+      console.log('Error saving retention setting:', error.message);
+    }
+  };
+
+  const getRetentionLabel = (days) => {
+    if (days === 0) return 'Forever';
+    if (days === 30) return '30 days';
+    if (days === 60) return '60 days';
+    if (days === 90) return '90 days';
+    if (days === 365) return '1 year';
+    return `${days} days`;
+  };
+
+  const handleClearGoalHistory = () => {
+    Alert.alert(
+      'Clear Goal History',
+      'Are you sure you want to delete all past goals? This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await goalsAPI.clearHistory();
+              Alert.alert('Success', 'Goal history cleared');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to clear goal history');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const getFrequencyLabel = (frequency, days) => {
@@ -785,6 +878,140 @@ const SettingsScreen = ({ navigation }) => {
           </View>
         </View>
 
+        {/* Goals Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Goals</Text>
+
+          {/* Notify when achieved */}
+          <View style={styles.settingCard}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <View style={[styles.settingIconContainer, { backgroundColor: '#ECFDF5' }]}>
+                  <Icon name="trophy-outline" size={22} color="#10B981" />
+                </View>
+                <View style={styles.settingText}>
+                  <Text style={styles.settingLabel}>Notify When Achieved</Text>
+                  <Text style={styles.settingDescription}>
+                    Celebrate when you complete a goal
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={goalNotifyAchieved}
+                onValueChange={handleGoalNotifyAchievedToggle}
+                trackColor={{ false: '#E5E7EB', true: '#A7F3D0' }}
+                thumbColor={goalNotifyAchieved ? '#10B981' : '#9CA3AF'}
+              />
+            </View>
+          </View>
+
+          {/* Remind before expiring */}
+          <View style={styles.settingCard}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <View style={[styles.settingIconContainer, { backgroundColor: '#FEF3C7' }]}>
+                  <Icon name="warning-outline" size={22} color="#F59E0B" />
+                </View>
+                <View style={styles.settingText}>
+                  <Text style={styles.settingLabel}>Remind Before Expiring</Text>
+                  <Text style={styles.settingDescription}>
+                    Get notified when a goal is about to expire
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={goalNotifyExpiring}
+                onValueChange={handleGoalNotifyExpiringToggle}
+                trackColor={{ false: '#E5E7EB', true: '#FDE68A' }}
+                thumbColor={goalNotifyExpiring ? '#F59E0B' : '#9CA3AF'}
+              />
+            </View>
+          </View>
+
+          {/* Notify when incomplete */}
+          <View style={styles.settingCard}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <View style={[styles.settingIconContainer, { backgroundColor: '#FEE2E2' }]}>
+                  <Icon name="close-circle-outline" size={22} color="#EF4444" />
+                </View>
+                <View style={styles.settingText}>
+                  <Text style={styles.settingLabel}>Notify When Incomplete</Text>
+                  <Text style={styles.settingDescription}>
+                    Get notified if a goal expires without completion
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={goalNotifyIncomplete}
+                onValueChange={handleGoalNotifyIncompleteToggle}
+                trackColor={{ false: '#E5E7EB', true: '#FECACA' }}
+                thumbColor={goalNotifyIncomplete ? '#EF4444' : '#9CA3AF'}
+              />
+            </View>
+          </View>
+
+          {/* History Retention */}
+          <View style={styles.settingCard}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <View style={[styles.settingIconContainer, { backgroundColor: colors.accent }]}>
+                  <Icon name="time-outline" size={22} color={colors.primary} />
+                </View>
+                <View style={styles.settingText}>
+                  <Text style={styles.settingLabel}>Goal History Retention</Text>
+                  <Text style={styles.settingDescription}>
+                    How long to keep past goals
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.retentionSelector}
+                onPress={() => setShowRetentionPicker(true)}
+              >
+                <Text style={styles.retentionText}>{getRetentionLabel(goalHistoryRetention)}</Text>
+                <Icon name="chevron-forward" size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            {showRetentionPicker && (
+              <View style={styles.retentionOptions}>
+                {[30, 60, 90, 365, 0].map((days) => (
+                  <TouchableOpacity
+                    key={days}
+                    style={[
+                      styles.retentionOption,
+                      goalHistoryRetention === days && styles.retentionOptionActive,
+                    ]}
+                    onPress={() => handleRetentionChange(days)}
+                  >
+                    <Text
+                      style={[
+                        styles.retentionOptionText,
+                        goalHistoryRetention === days && styles.retentionOptionTextActive,
+                      ]}
+                    >
+                      {getRetentionLabel(days)}
+                    </Text>
+                    {goalHistoryRetention === days && (
+                      <Icon name="checkmark" size={18} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Clear Goal History */}
+          <TouchableOpacity
+            style={styles.clearHistoryButton}
+            onPress={handleClearGoalHistory}
+          >
+            <Icon name="trash-outline" size={20} color="#EF4444" />
+            <Text style={styles.clearHistoryText}>Clear Goal History</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Display Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Display</Text>
@@ -1143,6 +1370,61 @@ const styles = StyleSheet.create({
   },
   timeBucketSwitch: {
     transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }],
+  },
+  // Goal Settings Styles
+  retentionSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  retentionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+    marginRight: 4,
+  },
+  retentionOptions: {
+    marginTop: 12,
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  retentionOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
+  },
+  retentionOptionActive: {
+    backgroundColor: colors.accent,
+  },
+  retentionOptionText: {
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  retentionOptionTextActive: {
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  clearHistoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    backgroundColor: '#FEE2E2',
+    borderRadius: 12,
+  },
+  clearHistoryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#EF4444',
+    marginLeft: 8,
   },
 });
 
