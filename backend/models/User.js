@@ -31,6 +31,30 @@ const User = sequelize.define('User', {
     type: DataTypes.ARRAY(DataTypes.STRING),
     defaultValue: [],
     allowNull: false
+  },
+  goal_notify_achieved: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    allowNull: false
+  },
+  goal_notify_expiring: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    allowNull: false
+  },
+  goal_notify_incomplete: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    allowNull: false
+  },
+  goal_history_retention_days: {
+    type: DataTypes.INTEGER,
+    defaultValue: 90,
+    allowNull: false,
+    validate: {
+      min: 0,
+      max: 365
+    }
   }
 }, {
   tableName: 'users',

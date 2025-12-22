@@ -21,6 +21,7 @@ const notificationRoutes = require('./routes/notification');
 const resourcesRoutes = require('./routes/resources');
 const progressRoutes = require('./routes/progress');
 const careCircleRoutes = require('./routes/careCircle');
+const goalsRoutes = require('./routes/goals');
 
 // Import error handlers
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
@@ -66,6 +67,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/resources', resourcesRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/care-circle', careCircleRoutes);
+app.use('/api/goals', goalsRoutes);
 
 // Error handling middleware (must be after all routes)
 app.use(notFoundHandler);

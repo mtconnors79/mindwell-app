@@ -11,6 +11,7 @@ const ActivityCompletion = require('./ActivityCompletion');
 const UserAchievement = require('./UserAchievement');
 const CareCircleConnection = require('./CareCircleConnection');
 const CareCircleAuditLog = require('./CareCircleAuditLog');
+const UserGoal = require('./UserGoal');
 
 // Define Sequelize Associations
 
@@ -52,6 +53,10 @@ CareCircleAuditLog.belongsTo(CareCircleConnection, { foreignKey: 'connection_id'
 User.hasMany(CareCircleAuditLog, { foreignKey: 'actor_user_id', as: 'careCircleAuditLogs' });
 CareCircleAuditLog.belongsTo(User, { foreignKey: 'actor_user_id', as: 'actor' });
 
+// User <-> UserGoal
+User.hasMany(UserGoal, { foreignKey: 'user_id', as: 'goals' });
+UserGoal.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
 module.exports = {
   // MongoDB Models
   CheckinResponse,
@@ -64,5 +69,6 @@ module.exports = {
   ActivityCompletion,
   UserAchievement,
   CareCircleConnection,
-  CareCircleAuditLog
+  CareCircleAuditLog,
+  UserGoal
 };
