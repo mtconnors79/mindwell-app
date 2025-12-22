@@ -27,6 +27,10 @@ import {
   scheduleNotification,
   cancelNotification,
   generateReminderId,
+  loadMultiCheckinSettings,
+  saveMultiCheckinSettings,
+  scheduleMultiCheckinReminders,
+  cancelMultiCheckinReminders,
 } from '../../services/notificationService';
 
 const RESOURCE_SUGGESTIONS_KEY = '@soulbloom_resource_suggestions';
@@ -45,6 +49,16 @@ const SettingsScreen = ({ navigation }) => {
 
   // Preferences State
   const [resourceSuggestionsEnabled, setResourceSuggestionsEnabled] = useState(true);
+
+  // Multi-Checkin State
+  const [multiCheckinEnabled, setMultiCheckinEnabled] = useState(false);
+  const [multiCheckinFrequency, setMultiCheckinFrequency] = useState(2);
+  const [timeBuckets, setTimeBuckets] = useState({
+    morning: { enabled: true, time: '08:00' },
+    afternoon: { enabled: true, time: '13:00' },
+    evening: { enabled: false, time: '19:00' },
+  });
+  const [showBucketTimePicker, setShowBucketTimePicker] = useState(null); // 'morning' | 'afternoon' | 'evening' | null
 
   // Load settings on mount
   useEffect(() => {
@@ -78,6 +92,12 @@ const SettingsScreen = ({ navigation }) => {
     } catch (error) {
       console.log('Error loading resource preference:', error);
     }
+
+    // Load multi-checkin settings
+    const multiSettings = await loadMultiCheckinSettings();
+    setMultiCheckinEnabled(multiSettings.enabled);
+    setMultiCheckinFrequency(multiSettings.frequency);
+    setTimeBuckets(multiSettings.timeBuckets);
   };
 
   const handleResourceSuggestionsToggle = async (value) => {
@@ -145,6 +165,153 @@ const SettingsScreen = ({ navigation }) => {
       minute: '2-digit',
       hour12: true,
     });
+  };
+
+  const formatTimeStringDisplay = (timeStr) => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return formatTimeDisplay(date);
+  };
+
+  // Multi-Checkin Handlers
+  const handleMultiCheckinToggle = async (value) => {
+    if (value && !hasPermission) {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        Alert.alert(
+          'Permission Required',
+          'Please enable notifications in Settings to receive reminders.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+      setHasPermission(true);
+    }
+
+    setMultiCheckinEnabled(value);
+
+    const newSettings = {
+      enabled: value,
+      frequency: multiCheckinFrequency,
+      timeBuckets,
+    };
+
+    await saveMultiCheckinSettings(newSettings);
+
+    if (value) {
+      await scheduleMultiCheckinReminders(newSettings);
+    } else {
+      await cancelMultiCheckinReminders();
+    }
+  };
+
+  const handleFrequencyChange = async (newFrequency) => {
+    setMultiCheckinFrequency(newFrequency);
+
+    // Update enabled buckets based on frequency
+    let updatedBuckets = { ...timeBuckets };
+    if (newFrequency === 2) {
+      // 2x per day: morning + evening (or keep current 2)
+      const enabledCount = Object.values(updatedBuckets).filter(b => b.enabled).length;
+      if (enabledCount > 2) {
+        updatedBuckets.afternoon = { ...updatedBuckets.afternoon, enabled: false };
+      }
+    }
+
+    setTimeBuckets(updatedBuckets);
+
+    const newSettings = {
+      enabled: multiCheckinEnabled,
+      frequency: newFrequency,
+      timeBuckets: updatedBuckets,
+    };
+
+    await saveMultiCheckinSettings(newSettings);
+
+    if (multiCheckinEnabled) {
+      await scheduleMultiCheckinReminders(newSettings);
+    }
+  };
+
+  const handleTimeBucketToggle = async (bucket, enabled) => {
+    // Enforce frequency limit
+    const enabledCount = Object.values(timeBuckets).filter(b => b.enabled).length;
+
+    if (enabled && enabledCount >= multiCheckinFrequency) {
+      Alert.alert(
+        'Limit Reached',
+        `You can only enable ${multiCheckinFrequency} time slots with ${multiCheckinFrequency}x frequency. Disable another slot first or increase frequency.`,
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    if (!enabled && enabledCount <= 1) {
+      Alert.alert(
+        'Minimum Required',
+        'At least one time slot must be enabled.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    const updatedBuckets = {
+      ...timeBuckets,
+      [bucket]: { ...timeBuckets[bucket], enabled },
+    };
+
+    setTimeBuckets(updatedBuckets);
+
+    const newSettings = {
+      enabled: multiCheckinEnabled,
+      frequency: multiCheckinFrequency,
+      timeBuckets: updatedBuckets,
+    };
+
+    await saveMultiCheckinSettings(newSettings);
+
+    if (multiCheckinEnabled) {
+      await scheduleMultiCheckinReminders(newSettings);
+    }
+  };
+
+  const handleBucketTimeChange = async (event, selectedTime) => {
+    if (Platform.OS === 'android') {
+      setShowBucketTimePicker(null);
+    }
+
+    if (selectedTime && showBucketTimePicker) {
+      const bucket = showBucketTimePicker;
+      const timeStr = formatTimeForStorage(selectedTime);
+
+      const updatedBuckets = {
+        ...timeBuckets,
+        [bucket]: { ...timeBuckets[bucket], time: timeStr },
+      };
+
+      setTimeBuckets(updatedBuckets);
+
+      const newSettings = {
+        enabled: multiCheckinEnabled,
+        frequency: multiCheckinFrequency,
+        timeBuckets: updatedBuckets,
+      };
+
+      await saveMultiCheckinSettings(newSettings);
+
+      if (multiCheckinEnabled && timeBuckets[bucket].enabled) {
+        await scheduleMultiCheckinReminders(newSettings);
+      }
+    }
+  };
+
+  const getBucketTimeAsDate = (bucket) => {
+    const timeStr = timeBuckets[bucket]?.time || '12:00';
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date;
   };
 
   const handleAddReminder = () => {
@@ -389,6 +556,205 @@ const SettingsScreen = ({ navigation }) => {
                   </View>
                 ))}
               </View>
+            )}
+          </View>
+        </View>
+
+        {/* Mood Check-in Reminders Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Mood Check-in Reminders</Text>
+
+          {/* Multi-Checkin Toggle */}
+          <View style={styles.settingCard}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <View style={[styles.settingIconContainer, { backgroundColor: '#ECFDF5' }]}>
+                  <Icon name="refresh-outline" size={22} color="#10B981" />
+                </View>
+                <View style={styles.settingText}>
+                  <Text style={styles.settingLabel}>Multiple Check-ins Per Day</Text>
+                  <Text style={styles.settingDescription}>
+                    Get prompted to check in at different times
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={multiCheckinEnabled}
+                onValueChange={handleMultiCheckinToggle}
+                trackColor={{ false: '#E5E7EB', true: '#A7F3D0' }}
+                thumbColor={multiCheckinEnabled ? '#10B981' : '#9CA3AF'}
+              />
+            </View>
+
+            {/* Frequency Selector - shown when enabled */}
+            {multiCheckinEnabled && (
+              <>
+                <View style={styles.frequencySection}>
+                  <Text style={styles.frequencyLabel}>How often?</Text>
+                  <View style={styles.frequencyButtons}>
+                    <TouchableOpacity
+                      style={[
+                        styles.frequencyButton,
+                        multiCheckinFrequency === 2 && styles.frequencyButtonActive,
+                      ]}
+                      onPress={() => handleFrequencyChange(2)}
+                    >
+                      <Text
+                        style={[
+                          styles.frequencyButtonText,
+                          multiCheckinFrequency === 2 && styles.frequencyButtonTextActive,
+                        ]}
+                      >
+                        2x per day
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.frequencyButton,
+                        multiCheckinFrequency === 3 && styles.frequencyButtonActive,
+                      ]}
+                      onPress={() => handleFrequencyChange(3)}
+                    >
+                      <Text
+                        style={[
+                          styles.frequencyButtonText,
+                          multiCheckinFrequency === 3 && styles.frequencyButtonTextActive,
+                        ]}
+                      >
+                        3x per day
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Time Bucket Toggles */}
+                <View style={styles.timeBucketsSection}>
+                  <Text style={styles.timeBucketsLabel}>When to remind you:</Text>
+
+                  {/* Morning */}
+                  <View style={styles.timeBucketItem}>
+                    <View style={styles.timeBucketInfo}>
+                      <Icon name="sunny-outline" size={20} color="#F59E0B" />
+                      <Text style={styles.timeBucketName}>Morning</Text>
+                    </View>
+                    <View style={styles.timeBucketControls}>
+                      <TouchableOpacity
+                        style={[
+                          styles.timeBucketTime,
+                          !timeBuckets.morning.enabled && styles.timeBucketTimeDisabled,
+                        ]}
+                        onPress={() => timeBuckets.morning.enabled && setShowBucketTimePicker('morning')}
+                        disabled={!timeBuckets.morning.enabled}
+                      >
+                        <Text
+                          style={[
+                            styles.timeBucketTimeText,
+                            !timeBuckets.morning.enabled && styles.timeBucketTimeTextDisabled,
+                          ]}
+                        >
+                          {formatTimeStringDisplay(timeBuckets.morning.time)}
+                        </Text>
+                      </TouchableOpacity>
+                      <Switch
+                        value={timeBuckets.morning.enabled}
+                        onValueChange={(value) => handleTimeBucketToggle('morning', value)}
+                        trackColor={{ false: '#E5E7EB', true: '#FDE68A' }}
+                        thumbColor={timeBuckets.morning.enabled ? '#F59E0B' : '#9CA3AF'}
+                        style={styles.timeBucketSwitch}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Afternoon */}
+                  <View style={styles.timeBucketItem}>
+                    <View style={styles.timeBucketInfo}>
+                      <Icon name="partly-sunny-outline" size={20} color="#6366F1" />
+                      <Text style={styles.timeBucketName}>Afternoon</Text>
+                    </View>
+                    <View style={styles.timeBucketControls}>
+                      <TouchableOpacity
+                        style={[
+                          styles.timeBucketTime,
+                          !timeBuckets.afternoon.enabled && styles.timeBucketTimeDisabled,
+                        ]}
+                        onPress={() => timeBuckets.afternoon.enabled && setShowBucketTimePicker('afternoon')}
+                        disabled={!timeBuckets.afternoon.enabled}
+                      >
+                        <Text
+                          style={[
+                            styles.timeBucketTimeText,
+                            !timeBuckets.afternoon.enabled && styles.timeBucketTimeTextDisabled,
+                          ]}
+                        >
+                          {formatTimeStringDisplay(timeBuckets.afternoon.time)}
+                        </Text>
+                      </TouchableOpacity>
+                      <Switch
+                        value={timeBuckets.afternoon.enabled}
+                        onValueChange={(value) => handleTimeBucketToggle('afternoon', value)}
+                        trackColor={{ false: '#E5E7EB', true: '#C7D2FE' }}
+                        thumbColor={timeBuckets.afternoon.enabled ? '#6366F1' : '#9CA3AF'}
+                        style={styles.timeBucketSwitch}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Evening */}
+                  <View style={styles.timeBucketItem}>
+                    <View style={styles.timeBucketInfo}>
+                      <Icon name="moon-outline" size={20} color="#8B5CF6" />
+                      <Text style={styles.timeBucketName}>Evening</Text>
+                    </View>
+                    <View style={styles.timeBucketControls}>
+                      <TouchableOpacity
+                        style={[
+                          styles.timeBucketTime,
+                          !timeBuckets.evening.enabled && styles.timeBucketTimeDisabled,
+                        ]}
+                        onPress={() => timeBuckets.evening.enabled && setShowBucketTimePicker('evening')}
+                        disabled={!timeBuckets.evening.enabled}
+                      >
+                        <Text
+                          style={[
+                            styles.timeBucketTimeText,
+                            !timeBuckets.evening.enabled && styles.timeBucketTimeTextDisabled,
+                          ]}
+                        >
+                          {formatTimeStringDisplay(timeBuckets.evening.time)}
+                        </Text>
+                      </TouchableOpacity>
+                      <Switch
+                        value={timeBuckets.evening.enabled}
+                        onValueChange={(value) => handleTimeBucketToggle('evening', value)}
+                        trackColor={{ false: '#E5E7EB', true: '#DDD6FE' }}
+                        thumbColor={timeBuckets.evening.enabled ? '#8B5CF6' : '#9CA3AF'}
+                        style={styles.timeBucketSwitch}
+                      />
+                    </View>
+                  </View>
+                </View>
+
+                {/* Time Picker for buckets */}
+                {showBucketTimePicker && (
+                  <View style={styles.timePickerContainer}>
+                    <DateTimePicker
+                      value={getBucketTimeAsDate(showBucketTimePicker)}
+                      mode="time"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={handleBucketTimeChange}
+                      style={styles.timePicker}
+                    />
+                    {Platform.OS === 'ios' && (
+                      <TouchableOpacity
+                        style={styles.doneButton}
+                        onPress={() => setShowBucketTimePicker(null)}
+                      >
+                        <Text style={styles.doneButtonText}>Done</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+              </>
             )}
           </View>
         </View>
@@ -682,6 +1048,101 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 32,
+  },
+  // Multi-Checkin Styles
+  frequencySection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  frequencyLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: 12,
+  },
+  frequencyButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  frequencyButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  frequencyButtonActive: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#10B981',
+  },
+  frequencyButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  frequencyButtonTextActive: {
+    color: '#10B981',
+  },
+  timeBucketsSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  timeBucketsLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: 12,
+  },
+  timeBucketItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.background,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+  },
+  timeBucketInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  timeBucketName: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.textPrimary,
+  },
+  timeBucketControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  timeBucketTime: {
+    backgroundColor: colors.surface,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  timeBucketTimeDisabled: {
+    opacity: 0.5,
+  },
+  timeBucketTimeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  timeBucketTimeTextDisabled: {
+    color: colors.textSecondary,
+  },
+  timeBucketSwitch: {
+    transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }],
   },
 });
 

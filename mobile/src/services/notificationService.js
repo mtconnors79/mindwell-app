@@ -8,6 +8,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const REMINDERS_STORAGE_KEY = '@soulbloom_reminders';
 const DAILY_REMINDER_KEY = '@soulbloom_daily_reminder';
+const MULTI_CHECKIN_KEY = '@soulbloom_multi_checkin';
+
+// Default times for each time bucket
+const TIME_BUCKET_DEFAULTS = {
+  morning: '08:00',
+  afternoon: '13:00',
+  evening: '19:00',
+};
 
 // Gentle message templates
 const CHECK_IN_MESSAGES = [
@@ -29,6 +37,31 @@ const COMBINED_MESSAGES = [
   'Take a moment for yourself. Check in or try a mindful activity.',
   'Your wellness reminder: How are you doing today?',
 ];
+
+// Time-of-day specific messages for multi-checkin
+const TIME_BUCKET_MESSAGES = {
+  morning: [
+    'Good morning! How are you starting your day?',
+    'Rise and shine! Take a moment to check in.',
+    'Morning check-in: How are you feeling today?',
+  ],
+  afternoon: [
+    'Afternoon check-in: How\'s your day going?',
+    'Midday moment: Take a breath and check in.',
+    'How are you feeling this afternoon?',
+  ],
+  evening: [
+    'Evening reflection: How was your day?',
+    'Time to wind down. How are you feeling tonight?',
+    'End of day check-in: Take a moment to reflect.',
+  ],
+};
+
+// Get random message for time bucket
+const getTimeBucketMessage = (bucket) => {
+  const messages = TIME_BUCKET_MESSAGES[bucket] || CHECK_IN_MESSAGES;
+  return messages[Math.floor(Math.random() * messages.length)];
+};
 
 // Get random message based on type
 const getRandomMessage = (type) => {
@@ -247,4 +280,156 @@ export const rescheduleAllReminders = async () => {
 // Generate unique ID for reminders
 export const generateReminderId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
+
+// ==========================================
+// MULTI-CHECKIN REMINDER FUNCTIONS
+// ==========================================
+
+/**
+ * Default multi-checkin settings
+ */
+const DEFAULT_MULTI_CHECKIN_SETTINGS = {
+  enabled: false,
+  frequency: 2, // 2x or 3x per day
+  timeBuckets: {
+    morning: { enabled: true, time: '08:00' },
+    afternoon: { enabled: true, time: '13:00' },
+    evening: { enabled: false, time: '19:00' },
+  },
+};
+
+/**
+ * Save multi-checkin settings
+ */
+export const saveMultiCheckinSettings = async (settings) => {
+  try {
+    await AsyncStorage.setItem(MULTI_CHECKIN_KEY, JSON.stringify(settings));
+  } catch (error) {
+    console.error('Error saving multi-checkin settings:', error);
+  }
+};
+
+/**
+ * Load multi-checkin settings
+ */
+export const loadMultiCheckinSettings = async () => {
+  try {
+    const data = await AsyncStorage.getItem(MULTI_CHECKIN_KEY);
+    return data ? JSON.parse(data) : DEFAULT_MULTI_CHECKIN_SETTINGS;
+  } catch (error) {
+    console.error('Error loading multi-checkin settings:', error);
+    return DEFAULT_MULTI_CHECKIN_SETTINGS;
+  }
+};
+
+/**
+ * Schedule a single time bucket reminder
+ */
+const scheduleTimeBucketReminder = async (bucket, time) => {
+  await createNotificationChannel();
+
+  const [hours, minutes] = time.split(':').map(Number);
+  const now = new Date();
+  const triggerDate = new Date();
+  triggerDate.setHours(hours, minutes, 0, 0);
+
+  // If time has passed today, schedule for tomorrow
+  if (triggerDate <= now) {
+    triggerDate.setDate(triggerDate.getDate() + 1);
+  }
+
+  const trigger = {
+    type: TriggerType.TIMESTAMP,
+    timestamp: triggerDate.getTime(),
+    repeatFrequency: RepeatFrequency.DAILY,
+  };
+
+  await notifee.createTriggerNotification(
+    {
+      id: `multi_checkin_${bucket}`,
+      title: 'SoulBloom',
+      body: getTimeBucketMessage(bucket),
+      android: {
+        channelId: 'reminders',
+        smallIcon: 'ic_launcher',
+        pressAction: {
+          id: 'default',
+        },
+      },
+      ios: {
+        sound: 'default',
+      },
+    },
+    trigger
+  );
+
+  return triggerDate;
+};
+
+/**
+ * Cancel a single time bucket reminder
+ */
+const cancelTimeBucketReminder = async (bucket) => {
+  await notifee.cancelNotification(`multi_checkin_${bucket}`);
+};
+
+/**
+ * Schedule all enabled multi-checkin reminders based on settings
+ */
+export const scheduleMultiCheckinReminders = async (settings) => {
+  const { enabled, timeBuckets } = settings;
+
+  // Cancel all existing multi-checkin reminders first
+  await cancelTimeBucketReminder('morning');
+  await cancelTimeBucketReminder('afternoon');
+  await cancelTimeBucketReminder('evening');
+
+  if (!enabled) {
+    return;
+  }
+
+  // Schedule enabled time buckets
+  const buckets = ['morning', 'afternoon', 'evening'];
+  for (const bucket of buckets) {
+    if (timeBuckets[bucket]?.enabled) {
+      await scheduleTimeBucketReminder(bucket, timeBuckets[bucket].time);
+    }
+  }
+};
+
+/**
+ * Cancel all multi-checkin reminders
+ */
+export const cancelMultiCheckinReminders = async () => {
+  await cancelTimeBucketReminder('morning');
+  await cancelTimeBucketReminder('afternoon');
+  await cancelTimeBucketReminder('evening');
+};
+
+/**
+ * Update a single time bucket setting and reschedule if needed
+ */
+export const updateTimeBucketSetting = async (bucket, enabled, time) => {
+  const settings = await loadMultiCheckinSettings();
+
+  settings.timeBuckets[bucket] = { enabled, time };
+  await saveMultiCheckinSettings(settings);
+
+  if (settings.enabled) {
+    if (enabled) {
+      await scheduleTimeBucketReminder(bucket, time);
+    } else {
+      await cancelTimeBucketReminder(bucket);
+    }
+  }
+
+  return settings;
+};
+
+/**
+ * Get default time for a bucket
+ */
+export const getDefaultBucketTime = (bucket) => {
+  return TIME_BUCKET_DEFAULTS[bucket] || '12:00';
 };
