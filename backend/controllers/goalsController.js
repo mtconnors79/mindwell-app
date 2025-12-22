@@ -1,6 +1,7 @@
 const { UserGoal } = require('../models');
 const { Op } = require('sequelize');
 const { calculateProgressForGoals, calculateProgress, isGoalCompleted, getTimeRemaining } = require('../services/goalProgressService');
+const { getAllTemplates, getTemplateById, getTemplatesByCategory, getTemplatesByActivityType } = require('../data/goalTemplates');
 
 const MAX_ACTIVE_GOALS = 10;
 
@@ -47,13 +48,63 @@ const getActiveGoals = async (req, res) => {
 };
 
 /**
+ * GET /api/goals/templates
+ * Get all goal templates
+ */
+const getGoalTemplates = async (req, res) => {
+  try {
+    const { category, activity_type } = req.query;
+
+    let templates = getAllTemplates();
+
+    // Filter by category if provided
+    if (category) {
+      templates = getTemplatesByCategory(category);
+    }
+
+    // Filter by activity_type if provided
+    if (activity_type) {
+      templates = templates.filter(t => t.activity_type === activity_type);
+    }
+
+    res.json({
+      templates,
+      count: templates.length
+    });
+  } catch (error) {
+    console.error('Get goal templates error:', error.message);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch goal templates'
+    });
+  }
+};
+
+/**
  * POST /api/goals
  * Create a new goal (validate max 10 active goals)
+ * Accepts optional template_id to pre-fill values
  */
 const createGoal = async (req, res) => {
   try {
     const userId = req.user.dbId;
-    const { title, activity_type, target_count, time_frame } = req.body;
+    let { title, activity_type, target_count, time_frame, template_id } = req.body;
+
+    // If template_id is provided, use template values as defaults
+    if (template_id) {
+      const template = getTemplateById(template_id);
+      if (!template) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: `Invalid template_id: ${template_id}`
+        });
+      }
+      // Use template values, but allow overrides from request body
+      title = title || template.title;
+      activity_type = activity_type || template.activity_type;
+      target_count = target_count || template.target_count;
+      time_frame = time_frame || template.time_frame;
+    }
 
     // Validate required fields
     if (!title || !activity_type || !target_count || !time_frame) {
@@ -523,5 +574,6 @@ module.exports = {
   completeGoal,
   getGoalHistory,
   deleteGoalHistory,
-  getGoalsSummary
+  getGoalsSummary,
+  getGoalTemplates
 };

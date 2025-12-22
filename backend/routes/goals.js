@@ -6,6 +6,9 @@ const { authenticateAndLoadUser } = require('../middleware/auth');
 // All routes require authentication
 router.use(authenticateAndLoadUser);
 
+// Templates endpoint (must be before /:id routes)
+router.get('/templates', goalsController.getGoalTemplates);
+
 // Summary statistics (must be before /:id routes)
 router.get('/summary', goalsController.getGoalsSummary);
 
