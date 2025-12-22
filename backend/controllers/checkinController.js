@@ -1,6 +1,31 @@
 const { CheckinResponse } = require('../models');
 const sentimentService = require('../services/sentimentService');
 
+/**
+ * Calculate time bucket from a Date object
+ * @param {Date} date - The date/time to calculate bucket for
+ * @returns {string} - 'morning' | 'afternoon' | 'evening' | 'night'
+ *
+ * Time buckets:
+ * - morning:   5:00 AM - 11:59 AM
+ * - afternoon: 12:00 PM - 4:59 PM
+ * - evening:   5:00 PM - 8:59 PM
+ * - night:     9:00 PM - 4:59 AM
+ */
+const getTimeBucket = (date) => {
+  const hour = date.getHours();
+
+  if (hour >= 5 && hour < 12) {
+    return 'morning';
+  } else if (hour >= 12 && hour < 17) {
+    return 'afternoon';
+  } else if (hour >= 17 && hour < 21) {
+    return 'evening';
+  } else {
+    return 'night';
+  }
+};
+
 const createCheckin = async (req, res) => {
   try {
     const {
@@ -55,6 +80,9 @@ const createCheckin = async (req, res) => {
       }
     }
 
+    const createdAt = new Date();
+    const timeBucket = getTimeBucket(createdAt);
+
     const checkin = await CheckinResponse.create({
       user_id,
       mood_rating,
@@ -62,7 +90,8 @@ const createCheckin = async (req, res) => {
       selected_emotions: filteredEmotions,
       check_in_text,
       ai_analysis: finalAnalysis,
-      created_at: new Date()
+      time_bucket: timeBucket,
+      created_at: createdAt
     });
 
     res.status(201).json({
@@ -476,6 +505,157 @@ const getCheckinStats = async (req, res) => {
   }
 };
 
+/**
+ * Get daily mood details for a specific date
+ * Returns check-ins grouped by time bucket with summary statistics
+ *
+ * Query params:
+ * - date: YYYY-MM-DD format (defaults to today)
+ *
+ * Response includes:
+ * - date: The queried date
+ * - summary: { averageMood, averageStress, totalCheckins, dominantEmotion }
+ * - timeBuckets: { morning: [], afternoon: [], evening: [], night: [] }
+ * - checkins: All check-ins for the day (raw data)
+ */
+const getDailyMoodDetails = async (req, res) => {
+  try {
+    const user_id = req.user.dbId;
+    const { date } = req.query;
+
+    // Parse the date or default to today
+    let targetDate;
+    if (date) {
+      targetDate = new Date(date);
+      if (isNaN(targetDate.getTime())) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: 'Invalid date format. Use YYYY-MM-DD'
+        });
+      }
+    } else {
+      targetDate = new Date();
+    }
+
+    // Set to start of day
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    // Set to end of day
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Fetch all check-ins for the day
+    const checkins = await CheckinResponse.find({
+      user_id,
+      created_at: {
+        $gte: startOfDay,
+        $lte: endOfDay
+      }
+    }).sort({ created_at: 1 });
+
+    // Group by time bucket
+    const timeBuckets = {
+      morning: [],
+      afternoon: [],
+      evening: [],
+      night: []
+    };
+
+    checkins.forEach(checkin => {
+      const bucket = checkin.time_bucket || getTimeBucket(checkin.created_at);
+      timeBuckets[bucket].push({
+        _id: checkin._id,
+        mood_rating: checkin.mood_rating,
+        stress_level: checkin.stress_level,
+        selected_emotions: checkin.selected_emotions,
+        time_bucket: bucket,
+        created_at: checkin.created_at,
+        ai_analysis: checkin.ai_analysis ? {
+          sentiment: checkin.ai_analysis.sentiment,
+          risk_level: checkin.ai_analysis.risk_level
+        } : null
+      });
+    });
+
+    // Calculate summary statistics
+    const moodScoreMap = {
+      great: 5,
+      good: 4,
+      okay: 3,
+      not_good: 2,
+      terrible: 1
+    };
+
+    let summary = {
+      totalCheckins: checkins.length,
+      averageMood: null,
+      averageMoodLabel: null,
+      averageStress: null,
+      dominantEmotion: null,
+      timeBucketCounts: {
+        morning: timeBuckets.morning.length,
+        afternoon: timeBuckets.afternoon.length,
+        evening: timeBuckets.evening.length,
+        night: timeBuckets.night.length
+      }
+    };
+
+    if (checkins.length > 0) {
+      // Calculate average mood
+      const moodSum = checkins.reduce((sum, c) => sum + moodScoreMap[c.mood_rating], 0);
+      const avgMoodScore = moodSum / checkins.length;
+      summary.averageMood = Math.round(avgMoodScore * 10) / 10;
+
+      // Map back to label
+      if (avgMoodScore >= 4.5) summary.averageMoodLabel = 'great';
+      else if (avgMoodScore >= 3.5) summary.averageMoodLabel = 'good';
+      else if (avgMoodScore >= 2.5) summary.averageMoodLabel = 'okay';
+      else if (avgMoodScore >= 1.5) summary.averageMoodLabel = 'not_good';
+      else summary.averageMoodLabel = 'terrible';
+
+      // Calculate average stress
+      const stressSum = checkins.reduce((sum, c) => sum + c.stress_level, 0);
+      summary.averageStress = Math.round((stressSum / checkins.length) * 10) / 10;
+
+      // Find dominant emotion
+      const emotionCounts = {};
+      checkins.forEach(c => {
+        c.selected_emotions.forEach(e => {
+          emotionCounts[e] = (emotionCounts[e] || 0) + 1;
+        });
+      });
+
+      if (Object.keys(emotionCounts).length > 0) {
+        summary.dominantEmotion = Object.entries(emotionCounts)
+          .sort((a, b) => b[1] - a[1])[0][0];
+      }
+    }
+
+    res.json({
+      date: targetDate.toISOString().split('T')[0],
+      summary,
+      timeBuckets,
+      checkins: checkins.map(c => ({
+        _id: c._id,
+        mood_rating: c.mood_rating,
+        stress_level: c.stress_level,
+        selected_emotions: c.selected_emotions,
+        check_in_text: c.check_in_text,
+        time_bucket: c.time_bucket || getTimeBucket(c.created_at),
+        created_at: c.created_at,
+        ai_analysis: c.ai_analysis
+      }))
+    });
+  } catch (error) {
+    console.error('Get daily mood details error:', error.message);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch daily mood details'
+    });
+  }
+};
+
 module.exports = {
   createCheckin,
   getCheckins,
@@ -485,5 +665,7 @@ module.exports = {
   addAiAnalysis,
   analyzeCheckin,
   analyzeText,
-  getCheckinStats
+  getCheckinStats,
+  getDailyMoodDetails,
+  getTimeBucket // Export for use in other modules if needed
 };

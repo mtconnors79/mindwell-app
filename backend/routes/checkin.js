@@ -11,6 +11,9 @@ router.use(authenticateAndLoadUser);
 // Get check-in statistics
 router.get('/stats', checkinValidation.list, checkinController.getCheckinStats);
 
+// Get daily mood details with time bucket breakdown
+router.get('/daily', checkinController.getDailyMoodDetails);
+
 // Analyze text without saving (standalone analysis) - AI rate limited
 router.post('/analyze', aiLimiter, checkinController.analyzeText);
 

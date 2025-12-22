@@ -46,6 +46,12 @@ const checkinResponseSchema = new mongoose.Schema({
     type: aiAnalysisSchema,
     default: null
   },
+  time_bucket: {
+    type: String,
+    enum: ['morning', 'afternoon', 'evening', 'night'],
+    default: null,
+    index: true
+  },
   created_at: {
     type: Date,
     default: Date.now,
@@ -58,6 +64,9 @@ const checkinResponseSchema = new mongoose.Schema({
 
 // Index for querying user check-ins by date range
 checkinResponseSchema.index({ user_id: 1, created_at: -1 });
+
+// Index for daily mood details query (by user, date, and time bucket)
+checkinResponseSchema.index({ user_id: 1, time_bucket: 1, created_at: -1 });
 
 const CheckinResponse = mongoose.model('CheckinResponse', checkinResponseSchema);
 
