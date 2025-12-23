@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { pdf } from '@react-pdf/renderer';
 import { careCircleAPI } from '../services/api';
 import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ExportReport from '../components/ExportReport';
-import PrintableReport from '../components/PrintableReport';
 import { format, subDays } from 'date-fns';
+
+// Lazy load heavy PDF components (only loaded when user clicks Export/Print)
+const ExportReport = lazy(() => import('../components/ExportReport'));
+const PrintableReport = lazy(() => import('../components/PrintableReport'));
 import {
   LineChart,
   Line,
@@ -120,15 +121,21 @@ const PatientView = () => {
     }
   };
 
-  // Generate PDF and download
+  // Generate PDF and download (dynamically imports @react-pdf/renderer)
   const handleExportPDF = async () => {
     setExportLoading(true);
     try {
+      // Dynamic import of @react-pdf/renderer and ExportReport
+      const [{ pdf }, { default: ExportReportComponent }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('../components/ExportReport'),
+      ]);
+
       const dateRange = getDateRangeFromPeriod(period);
       const generatedAt = new Date();
 
       const doc = (
-        <ExportReport
+        <ExportReportComponent
           patientName={summary?.patient_name || 'Unknown'}
           sharingTier={summary?.sharing_tier || 'data_only'}
           dateRange={dateRange}
@@ -518,19 +525,21 @@ const PatientView = () => {
         </div>
       </Layout>
 
-      {/* Hidden printable report (rendered when printing) */}
+      {/* Hidden printable report (rendered when printing, lazy loaded) */}
       {showPrintView && (
-        <PrintableReport
-          ref={printRef}
-          patientName={summary?.patient_name || 'Unknown'}
-          sharingTier={summary?.sharing_tier || 'data_only'}
-          dateRange={dateRange}
-          summary={summary?.summary}
-          moodTrends={summary?.mood_trends}
-          emotions={summary?.most_common_emotions}
-          checkins={checkins}
-          generatedAt={new Date()}
-        />
+        <Suspense fallback={<div className="print-loading">Preparing print view...</div>}>
+          <PrintableReport
+            ref={printRef}
+            patientName={summary?.patient_name || 'Unknown'}
+            sharingTier={summary?.sharing_tier || 'data_only'}
+            dateRange={dateRange}
+            summary={summary?.summary}
+            moodTrends={summary?.mood_trends}
+            emotions={summary?.most_common_emotions}
+            checkins={checkins}
+            generatedAt={new Date()}
+          />
+        </Suspense>
       )}
     </>
   );
