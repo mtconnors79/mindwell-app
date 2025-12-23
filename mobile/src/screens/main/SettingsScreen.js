@@ -8,14 +8,16 @@ import {
   Switch,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { getTimeZone } from 'react-native-localize';
 import AddReminderModal from '../../components/AddReminderModal';
 import { colors } from '../../theme/colors';
-import { userSettingsAPI } from '../../services/api';
+import { userSettingsAPI, notificationAPI } from '../../services/api';
 import { goalsAPI } from '../../services/goalsApi';
 import {
   requestNotificationPermission,
@@ -69,6 +71,20 @@ const SettingsScreen = ({ navigation }) => {
   const [goalHistoryRetention, setGoalHistoryRetention] = useState(90);
   const [showRetentionPicker, setShowRetentionPicker] = useState(false);
 
+  // Push Notification Preferences State
+  const [pushPrefsLoading, setPushPrefsLoading] = useState(true);
+  const [patternIntervention, setPatternIntervention] = useState(true);
+  const [streakReminders, setStreakReminders] = useState(true);
+  const [reEngagement, setReEngagement] = useState(true);
+  const [careCircleAlerts, setCareCircleAlerts] = useState(true);
+  const [quietHoursEnabled, setQuietHoursEnabled] = useState(true);
+  const [quietHoursStart, setQuietHoursStart] = useState('21:00');
+  const [quietHoursEnd, setQuietHoursEnd] = useState('08:00');
+  const [dailyNotificationLimit, setDailyNotificationLimit] = useState(5);
+  const [showQuietStartPicker, setShowQuietStartPicker] = useState(false);
+  const [showQuietEndPicker, setShowQuietEndPicker] = useState(false);
+  const [showDailyLimitPicker, setShowDailyLimitPicker] = useState(false);
+
   // Load settings on mount
   useEffect(() => {
     loadSettings();
@@ -118,6 +134,29 @@ const SettingsScreen = ({ navigation }) => {
       setGoalHistoryRetention(settings.goal_history_retention_days);
     } catch (error) {
       console.log('Error loading goal settings:', error.message);
+    }
+
+    // Load push notification preferences from backend
+    await loadPushNotificationPreferences();
+  };
+
+  const loadPushNotificationPreferences = async () => {
+    setPushPrefsLoading(true);
+    try {
+      const response = await notificationAPI.getPreferences();
+      const prefs = response.data.preferences;
+      setPatternIntervention(prefs.pattern_intervention ?? true);
+      setStreakReminders(prefs.streak_reminders ?? true);
+      setReEngagement(prefs.re_engagement ?? true);
+      setCareCircleAlerts(prefs.care_circle_alerts ?? true);
+      setQuietHoursEnabled(prefs.quiet_hours_enabled ?? true);
+      setQuietHoursStart(prefs.quiet_hours_start ?? '21:00');
+      setQuietHoursEnd(prefs.quiet_hours_end ?? '08:00');
+      setDailyNotificationLimit(prefs.daily_limit ?? 5);
+    } catch (error) {
+      console.log('Error loading push notification preferences:', error.message);
+    } finally {
+      setPushPrefsLoading(false);
     }
   };
 
@@ -490,6 +529,101 @@ const SettingsScreen = ({ navigation }) => {
         },
       ]
     );
+  };
+
+  // Push notification preference handlers
+  const updatePushPreference = async (key, value, setter, revertValue) => {
+    setter(value);
+    try {
+      // Also update timezone when saving preferences
+      const timezone = getTimeZone();
+      await notificationAPI.updatePreferences({ [key]: value, timezone });
+    } catch (error) {
+      console.log(`Error updating ${key}:`, error.message);
+      setter(revertValue);
+      Alert.alert('Error', 'Failed to update preference. Please try again.');
+    }
+  };
+
+  const handlePatternInterventionToggle = (value) => {
+    updatePushPreference('pattern_intervention', value, setPatternIntervention, !value);
+  };
+
+  const handleStreakRemindersToggle = (value) => {
+    updatePushPreference('streak_reminders', value, setStreakReminders, !value);
+  };
+
+  const handleReEngagementToggle = (value) => {
+    updatePushPreference('re_engagement', value, setReEngagement, !value);
+  };
+
+  const handleCareCircleAlertsToggle = (value) => {
+    updatePushPreference('care_circle_alerts', value, setCareCircleAlerts, !value);
+  };
+
+  const handleQuietHoursToggle = (value) => {
+    updatePushPreference('quiet_hours_enabled', value, setQuietHoursEnabled, !value);
+  };
+
+  const handleQuietStartChange = async (event, selectedTime) => {
+    if (Platform.OS === 'android') {
+      setShowQuietStartPicker(false);
+    }
+
+    if (selectedTime) {
+      const timeStr = formatTimeForStorage(selectedTime);
+      const oldValue = quietHoursStart;
+      setQuietHoursStart(timeStr);
+
+      try {
+        const timezone = getTimeZone();
+        await notificationAPI.updatePreferences({ quiet_hours_start: timeStr, timezone });
+      } catch (error) {
+        console.log('Error updating quiet hours start:', error.message);
+        setQuietHoursStart(oldValue);
+      }
+    }
+  };
+
+  const handleQuietEndChange = async (event, selectedTime) => {
+    if (Platform.OS === 'android') {
+      setShowQuietEndPicker(false);
+    }
+
+    if (selectedTime) {
+      const timeStr = formatTimeForStorage(selectedTime);
+      const oldValue = quietHoursEnd;
+      setQuietHoursEnd(timeStr);
+
+      try {
+        const timezone = getTimeZone();
+        await notificationAPI.updatePreferences({ quiet_hours_end: timeStr, timezone });
+      } catch (error) {
+        console.log('Error updating quiet hours end:', error.message);
+        setQuietHoursEnd(oldValue);
+      }
+    }
+  };
+
+  const handleDailyLimitChange = async (limit) => {
+    const oldValue = dailyNotificationLimit;
+    setDailyNotificationLimit(limit);
+    setShowDailyLimitPicker(false);
+
+    try {
+      const timezone = getTimeZone();
+      await notificationAPI.updatePreferences({ daily_limit: limit, timezone });
+    } catch (error) {
+      console.log('Error updating daily limit:', error.message);
+      setDailyNotificationLimit(oldValue);
+    }
+  };
+
+  const getQuietTimeAsDate = (timeStr) => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date;
   };
 
   const getFrequencyLabel = (frequency, days) => {
@@ -1012,6 +1146,258 @@ const SettingsScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
+        {/* Push Notification Preferences Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Push Notifications</Text>
+
+          {pushPrefsLoading ? (
+            <View style={styles.settingCard}>
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={styles.loadingText}>Loading preferences...</Text>
+              </View>
+            </View>
+          ) : (
+            <>
+              {/* Pattern Intervention */}
+              <View style={styles.settingCard}>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={[styles.settingIconContainer, { backgroundColor: '#EDE9FE' }]}>
+                      <Icon name="pulse-outline" size={22} color="#8B5CF6" />
+                    </View>
+                    <View style={styles.settingText}>
+                      <Text style={styles.settingLabel}>Wellness Check-ins</Text>
+                      <Text style={styles.settingDescription}>
+                        Get support when you're having tough days
+                      </Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={patternIntervention}
+                    onValueChange={handlePatternInterventionToggle}
+                    trackColor={{ false: '#E5E7EB', true: '#DDD6FE' }}
+                    thumbColor={patternIntervention ? '#8B5CF6' : '#9CA3AF'}
+                  />
+                </View>
+              </View>
+
+              {/* Streak Reminders */}
+              <View style={styles.settingCard}>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={[styles.settingIconContainer, { backgroundColor: '#FEF3C7' }]}>
+                      <Icon name="flame-outline" size={22} color="#F59E0B" />
+                    </View>
+                    <View style={styles.settingText}>
+                      <Text style={styles.settingLabel}>Streak Reminders</Text>
+                      <Text style={styles.settingDescription}>
+                        Protect your check-in streaks
+                      </Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={streakReminders}
+                    onValueChange={handleStreakRemindersToggle}
+                    trackColor={{ false: '#E5E7EB', true: '#FDE68A' }}
+                    thumbColor={streakReminders ? '#F59E0B' : '#9CA3AF'}
+                  />
+                </View>
+              </View>
+
+              {/* Re-engagement */}
+              <View style={styles.settingCard}>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={[styles.settingIconContainer, { backgroundColor: '#DBEAFE' }]}>
+                      <Icon name="hand-left-outline" size={22} color="#3B82F6" />
+                    </View>
+                    <View style={styles.settingText}>
+                      <Text style={styles.settingLabel}>Re-engagement</Text>
+                      <Text style={styles.settingDescription}>
+                        Gentle nudges if you haven't checked in
+                      </Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={reEngagement}
+                    onValueChange={handleReEngagementToggle}
+                    trackColor={{ false: '#E5E7EB', true: '#BFDBFE' }}
+                    thumbColor={reEngagement ? '#3B82F6' : '#9CA3AF'}
+                  />
+                </View>
+              </View>
+
+              {/* Care Circle Alerts */}
+              <View style={styles.settingCard}>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={[styles.settingIconContainer, { backgroundColor: '#FCE7F3' }]}>
+                      <Icon name="people-outline" size={22} color="#EC4899" />
+                    </View>
+                    <View style={styles.settingText}>
+                      <Text style={styles.settingLabel}>Care Circle Alerts</Text>
+                      <Text style={styles.settingDescription}>
+                        Notifications from your care connections
+                      </Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={careCircleAlerts}
+                    onValueChange={handleCareCircleAlertsToggle}
+                    trackColor={{ false: '#E5E7EB', true: '#FBCFE8' }}
+                    thumbColor={careCircleAlerts ? '#EC4899' : '#9CA3AF'}
+                  />
+                </View>
+              </View>
+
+              {/* Quiet Hours */}
+              <View style={styles.settingCard}>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={[styles.settingIconContainer, { backgroundColor: '#E0E7FF' }]}>
+                      <Icon name="moon-outline" size={22} color="#6366F1" />
+                    </View>
+                    <View style={styles.settingText}>
+                      <Text style={styles.settingLabel}>Quiet Hours</Text>
+                      <Text style={styles.settingDescription}>
+                        No notifications during sleep hours
+                      </Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={quietHoursEnabled}
+                    onValueChange={handleQuietHoursToggle}
+                    trackColor={{ false: '#E5E7EB', true: '#C7D2FE' }}
+                    thumbColor={quietHoursEnabled ? '#6366F1' : '#9CA3AF'}
+                  />
+                </View>
+
+                {quietHoursEnabled && (
+                  <View style={styles.quietHoursContainer}>
+                    <View style={styles.quietHoursRow}>
+                      <Text style={styles.quietHoursLabel}>Start</Text>
+                      <TouchableOpacity
+                        style={styles.quietTimeButton}
+                        onPress={() => setShowQuietStartPicker(true)}
+                      >
+                        <Icon name="time-outline" size={18} color={colors.primary} />
+                        <Text style={styles.quietTimeText}>
+                          {formatTimeStringDisplay(quietHoursStart)}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.quietHoursRow}>
+                      <Text style={styles.quietHoursLabel}>End</Text>
+                      <TouchableOpacity
+                        style={styles.quietTimeButton}
+                        onPress={() => setShowQuietEndPicker(true)}
+                      >
+                        <Icon name="time-outline" size={18} color={colors.primary} />
+                        <Text style={styles.quietTimeText}>
+                          {formatTimeStringDisplay(quietHoursEnd)}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {showQuietStartPicker && (
+                      <View style={styles.timePickerContainer}>
+                        <DateTimePicker
+                          value={getQuietTimeAsDate(quietHoursStart)}
+                          mode="time"
+                          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                          onChange={handleQuietStartChange}
+                          style={styles.timePicker}
+                        />
+                        {Platform.OS === 'ios' && (
+                          <TouchableOpacity
+                            style={styles.doneButton}
+                            onPress={() => setShowQuietStartPicker(false)}
+                          >
+                            <Text style={styles.doneButtonText}>Done</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    )}
+
+                    {showQuietEndPicker && (
+                      <View style={styles.timePickerContainer}>
+                        <DateTimePicker
+                          value={getQuietTimeAsDate(quietHoursEnd)}
+                          mode="time"
+                          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                          onChange={handleQuietEndChange}
+                          style={styles.timePicker}
+                        />
+                        {Platform.OS === 'ios' && (
+                          <TouchableOpacity
+                            style={styles.doneButton}
+                            onPress={() => setShowQuietEndPicker(false)}
+                          >
+                            <Text style={styles.doneButtonText}>Done</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
+
+              {/* Daily Limit */}
+              <View style={styles.settingCard}>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={[styles.settingIconContainer, { backgroundColor: '#ECFDF5' }]}>
+                      <Icon name="options-outline" size={22} color="#10B981" />
+                    </View>
+                    <View style={styles.settingText}>
+                      <Text style={styles.settingLabel}>Daily Limit</Text>
+                      <Text style={styles.settingDescription}>
+                        Max notifications per day
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.dailyLimitSelector}
+                    onPress={() => setShowDailyLimitPicker(!showDailyLimitPicker)}
+                  >
+                    <Text style={styles.dailyLimitText}>{dailyNotificationLimit}</Text>
+                    <Icon name="chevron-down" size={18} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                </View>
+
+                {showDailyLimitPicker && (
+                  <View style={styles.dailyLimitOptions}>
+                    {[1, 2, 3, 4, 5].map((limit) => (
+                      <TouchableOpacity
+                        key={limit}
+                        style={[
+                          styles.dailyLimitOption,
+                          dailyNotificationLimit === limit && styles.dailyLimitOptionActive,
+                        ]}
+                        onPress={() => handleDailyLimitChange(limit)}
+                      >
+                        <Text
+                          style={[
+                            styles.dailyLimitOptionText,
+                            dailyNotificationLimit === limit && styles.dailyLimitOptionTextActive,
+                          ]}
+                        >
+                          {limit} per day
+                        </Text>
+                        {dailyNotificationLimit === limit && (
+                          <Icon name="checkmark" size={18} color={colors.primary} />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </>
+          )}
+        </View>
+
         {/* Display Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Display</Text>
@@ -1425,6 +1811,89 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#EF4444',
     marginLeft: 8,
+  },
+  // Push Notification Preferences Styles
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  quietHoursContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    gap: 12,
+  },
+  quietHoursRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  quietHoursLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.textPrimary,
+  },
+  quietTimeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 6,
+  },
+  quietTimeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  dailyLimitSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 4,
+  },
+  dailyLimitText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  dailyLimitOptions: {
+    marginTop: 12,
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  dailyLimitOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
+  },
+  dailyLimitOptionActive: {
+    backgroundColor: colors.accent,
+  },
+  dailyLimitOptionText: {
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  dailyLimitOptionTextActive: {
+    fontWeight: '600',
+    color: colors.primary,
   },
 });
 

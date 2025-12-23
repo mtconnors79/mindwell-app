@@ -220,6 +220,13 @@ export const notificationAPI = {
     api.post('/notifications/register-device', { token, platform }),
   unregisterDevice: (token) =>
     api.post('/notifications/unregister-device', { token }),
+  // Notification preferences
+  getPreferences: () =>
+    api.get('/notifications/preferences'),
+  updatePreferences: (preferences) =>
+    api.put('/notifications/preferences', preferences),
+  getHistory: (limit = 50) =>
+    api.get(`/notifications/history?limit=${limit}`),
   // Legacy endpoints
   registerToken: (token) =>
     api.post('/notifications/token', { token }),
