@@ -28,7 +28,7 @@ const MoodRangeBand = memo(function MoodRangeBand({
   yMin = 1,
   yMax = 5,
   color = '#6366F1',
-}) => {
+}) {
   if (!data || data.length === 0) {
     return null;
   }

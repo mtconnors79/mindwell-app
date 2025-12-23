@@ -69,7 +69,7 @@ const VarianceFlag = memo(function VarianceFlag({
   yMin = 1,
   yMax = 5,
   onFlagPress,
-}) => {
+}) {
   if (!rangeData || rangeData.length === 0) {
     return null;
   }
