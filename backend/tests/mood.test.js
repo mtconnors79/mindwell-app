@@ -11,59 +11,32 @@ const request = require('supertest');
 const express = require('express');
 const { mockUser, generateTestToken } = require('./setup');
 
-// Mock MoodEntry model (Sequelize/PostgreSQL)
-const mockMoodEntries = [];
+// Mock storage
+let mockMoodEntries = [];
 let mockIdCounter = 1;
 
-const mockMoodEntry = {
-  create: jest.fn().mockImplementation((data) => {
-    const entry = {
-      id: mockIdCounter++,
-      ...data,
-      created_at: new Date(),
-      toJSON: () => entry
-    };
-    mockMoodEntries.push(entry);
-    return Promise.resolve(entry);
-  }),
-  findAndCountAll: jest.fn().mockImplementation(({ where, limit, offset }) => {
-    const filtered = mockMoodEntries.filter(e => e.user_id === where.user_id);
-    return Promise.resolve({
-      count: filtered.length,
-      rows: filtered.slice(offset || 0, (offset || 0) + (limit || 30))
-    });
-  }),
-  findOne: jest.fn().mockImplementation(({ where }) => {
-    const entry = mockMoodEntries.find(e => e.id === where.id && e.user_id === where.user_id);
-    if (entry) {
-      entry.update = jest.fn().mockImplementation((updates) => {
-        Object.assign(entry, updates);
-        return Promise.resolve(entry);
-      });
-      entry.destroy = jest.fn().mockImplementation(() => {
-        const index = mockMoodEntries.findIndex(e => e.id === entry.id);
-        if (index > -1) mockMoodEntries.splice(index, 1);
-        return Promise.resolve();
-      });
-    }
-    return Promise.resolve(entry || null);
-  }),
-  findAll: jest.fn().mockImplementation(({ where }) => {
-    const filtered = mockMoodEntries.filter(e => e.user_id === where.user_id);
-    return Promise.resolve(filtered);
-  })
-};
+// Mock functions defined at top level for Jest hoisting
+const mockCreate = jest.fn();
+const mockFindAndCountAll = jest.fn();
+const mockFindOne = jest.fn();
+const mockFindAll = jest.fn();
 
 // Mock the models module
 jest.mock('../models', () => ({
-  MoodEntry: mockMoodEntry,
-  CheckinResponse: require('../models/CheckinResponse'),
+  MoodEntry: {
+    create: mockCreate,
+    findAndCountAll: mockFindAndCountAll,
+    findOne: mockFindOne,
+    findAll: mockFindAll
+  },
+  CheckinResponse: {},
   User: {},
   Profile: {}
 }));
 
 // Import controller after mocking
 const moodController = require('../controllers/moodController');
+const { MoodEntry } = require('../models');
 
 // Create test Express app
 const createApp = () => {
@@ -108,9 +81,52 @@ describe('Mood API', () => {
 
   beforeEach(() => {
     // Clear mock data
-    mockMoodEntries.length = 0;
+    mockMoodEntries = [];
     mockIdCounter = 1;
     jest.clearAllMocks();
+
+    // Default mock implementations
+    mockCreate.mockImplementation((data) => {
+      const entry = {
+        id: mockIdCounter++,
+        ...data,
+        created_at: new Date(),
+        toJSON: function() { return this; }
+      };
+      mockMoodEntries.push(entry);
+      return Promise.resolve(entry);
+    });
+
+    mockFindAndCountAll.mockImplementation(({ where, limit, offset }) => {
+      const filtered = mockMoodEntries.filter(e => e.user_id === where.user_id);
+      return Promise.resolve({
+        count: filtered.length,
+        rows: filtered.slice(offset || 0, (offset || 0) + (limit || 30))
+      });
+    });
+
+    mockFindOne.mockImplementation(({ where }) => {
+      // Handle string/number comparison for ID from URL params
+      const id = parseInt(where.id, 10);
+      const entry = mockMoodEntries.find(e => e.id === id && e.user_id === where.user_id);
+      if (entry) {
+        entry.update = jest.fn().mockImplementation((updates) => {
+          Object.assign(entry, updates);
+          return Promise.resolve(entry);
+        });
+        entry.destroy = jest.fn().mockImplementation(() => {
+          const index = mockMoodEntries.findIndex(e => e.id === entry.id);
+          if (index > -1) mockMoodEntries.splice(index, 1);
+          return Promise.resolve();
+        });
+      }
+      return Promise.resolve(entry || null);
+    });
+
+    mockFindAll.mockImplementation(({ where }) => {
+      const filtered = mockMoodEntries.filter(e => e.user_id === where?.user_id);
+      return Promise.resolve(filtered);
+    });
   });
 
   describe('POST /api/mood', () => {
@@ -131,7 +147,7 @@ describe('Mood API', () => {
       expect(res.body.moodEntry).toBeDefined();
       expect(res.body.moodEntry.sentiment_score).toBe(0.8);
       expect(res.body.moodEntry.sentiment_label).toBe('positive');
-      expect(mockMoodEntry.create).toHaveBeenCalledWith(expect.objectContaining({
+      expect(MoodEntry.create).toHaveBeenCalledWith(expect.objectContaining({
         user_id: mockUser.dbId,
         sentiment_score: 0.8,
         sentiment_label: 'positive',
@@ -212,13 +228,12 @@ describe('Mood API', () => {
   describe('GET /api/mood', () => {
     beforeEach(() => {
       // Pre-populate mock entries
-      const entries = [
+      mockMoodEntries = [
         { id: 1, user_id: mockUser.dbId, sentiment_score: 0.8, sentiment_label: 'positive', check_in_date: '2024-01-15', created_at: new Date('2024-01-15') },
         { id: 2, user_id: mockUser.dbId, sentiment_score: 0.5, sentiment_label: 'positive', check_in_date: '2024-01-16', created_at: new Date('2024-01-16') },
         { id: 3, user_id: mockUser.dbId, sentiment_score: -0.2, sentiment_label: 'negative', check_in_date: '2024-01-17', created_at: new Date('2024-01-17') },
         { id: 4, user_id: 999, sentiment_score: 0.9, sentiment_label: 'positive', check_in_date: '2024-01-17', created_at: new Date('2024-01-17') }
       ];
-      mockMoodEntries.push(...entries);
       mockIdCounter = 5;
     });
 
@@ -256,13 +271,12 @@ describe('Mood API', () => {
   describe('GET /api/mood/stats', () => {
     beforeEach(() => {
       // Pre-populate mock entries
-      const entries = [
+      mockMoodEntries = [
         { id: 1, user_id: mockUser.dbId, sentiment_score: 0.8, sentiment_label: 'positive', check_in_date: '2024-01-15', created_at: new Date('2024-01-15') },
         { id: 2, user_id: mockUser.dbId, sentiment_score: 0.6, sentiment_label: 'positive', check_in_date: '2024-01-16', created_at: new Date('2024-01-16') },
         { id: 3, user_id: mockUser.dbId, sentiment_score: -0.2, sentiment_label: 'negative', check_in_date: '2024-01-17', created_at: new Date('2024-01-17') },
         { id: 4, user_id: mockUser.dbId, sentiment_score: 0.0, sentiment_label: 'neutral', check_in_date: '2024-01-18', created_at: new Date('2024-01-18') }
       ];
-      mockMoodEntries.push(...entries);
       mockIdCounter = 5;
     });
 
@@ -318,7 +332,7 @@ describe('Mood API', () => {
     });
 
     it('should return empty stats for user with no entries', async () => {
-      mockMoodEntries.length = 0;
+      mockMoodEntries = [];
 
       const res = await request(app)
         .get('/api/mood/stats')
@@ -341,14 +355,14 @@ describe('Mood API', () => {
 
   describe('GET /api/mood/:id', () => {
     beforeEach(() => {
-      mockMoodEntries.push({
+      mockMoodEntries = [{
         id: 1,
         user_id: mockUser.dbId,
         sentiment_score: 0.8,
         sentiment_label: 'positive',
         check_in_date: '2024-01-15',
         created_at: new Date()
-      });
+      }];
       mockIdCounter = 2;
     });
 
@@ -374,15 +388,14 @@ describe('Mood API', () => {
 
   describe('PUT /api/mood/:id', () => {
     beforeEach(() => {
-      const entry = {
+      mockMoodEntries = [{
         id: 1,
         user_id: mockUser.dbId,
         sentiment_score: 0.8,
         sentiment_label: 'positive',
         check_in_date: '2024-01-15',
         created_at: new Date()
-      };
-      mockMoodEntries.push(entry);
+      }];
       mockIdCounter = 2;
     });
 
@@ -413,14 +426,14 @@ describe('Mood API', () => {
 
   describe('DELETE /api/mood/:id', () => {
     beforeEach(() => {
-      mockMoodEntries.push({
+      mockMoodEntries = [{
         id: 1,
         user_id: mockUser.dbId,
         sentiment_score: 0.8,
         sentiment_label: 'positive',
         check_in_date: '2024-01-15',
         created_at: new Date()
-      });
+      }];
       mockIdCounter = 2;
     });
 

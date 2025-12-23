@@ -10,7 +10,8 @@
     "test:watch": "jest --watch",
     "test:ci": "jest --coverage --ci --forceExit",
     "db:migrate": "node scripts/run-migrations.js",
-    "db:indexes": "node scripts/createMongoIndexes.js"
+    "db:indexes": "node scripts/createMongoIndexes.js",
+    "generate-test-data": "node scripts/generateTestData.js"
   },
   "keywords": [
     "express",

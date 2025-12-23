@@ -178,6 +178,44 @@ jest.mock('react-native-config', () => ({
   FIREBASE_APP_ID: '1:123456789:web:abc123',
 }));
 
+// Mock react-native-localize
+jest.mock('react-native-localize', () => ({
+  getTimeZone: () => 'America/New_York',
+  getLocales: () => [{ languageCode: 'en', countryCode: 'US' }],
+  getNumberFormatSettings: () => ({ decimalSeparator: '.', groupingSeparator: ',' }),
+  getCalendar: () => 'gregorian',
+  getCountry: () => 'US',
+  getCurrencies: () => ['USD'],
+  getTemperatureUnit: () => 'fahrenheit',
+  uses24HourClock: () => false,
+  usesMetricSystem: () => false,
+  usesAutoDateAndTime: () => true,
+  usesAutoTimeZone: () => true,
+}));
+
+// Mock @react-native-firebase/messaging
+jest.mock('@react-native-firebase/messaging', () => {
+  return () => ({
+    getToken: jest.fn(() => Promise.resolve('mock-fcm-token')),
+    deleteToken: jest.fn(() => Promise.resolve()),
+    onTokenRefresh: jest.fn((callback) => {
+      return jest.fn(); // unsubscribe function
+    }),
+    requestPermission: jest.fn(() => Promise.resolve(1)),
+    hasPermission: jest.fn(() => Promise.resolve(1)),
+    setBackgroundMessageHandler: jest.fn(),
+    onMessage: jest.fn((callback) => {
+      return jest.fn(); // unsubscribe function
+    }),
+    onNotificationOpenedApp: jest.fn((callback) => {
+      return jest.fn(); // unsubscribe function
+    }),
+    getInitialNotification: jest.fn(() => Promise.resolve(null)),
+    subscribeToTopic: jest.fn(() => Promise.resolve()),
+    unsubscribeFromTopic: jest.fn(() => Promise.resolve()),
+  });
+});
+
 // Mock Alert
 jest.spyOn(require('react-native').Alert, 'alert').mockImplementation(() => {});
 

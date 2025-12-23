@@ -396,8 +396,8 @@ describe('Sentiment Service', () => {
           selected_emotions: ['sad']
         });
 
-        expect(result.suggestions).toContain(expect.stringContaining('988'));
-        expect(result.suggestions).toContain(expect.stringContaining('Crisis Text Line'));
+        expect(result.suggestions.some(s => s.includes('988'))).toBe(true);
+        expect(result.suggestions.some(s => s.includes('Crisis Text Line'))).toBe(true);
       });
     });
   });
@@ -419,7 +419,7 @@ describe('Sentiment Service', () => {
       });
 
       expect(result.risk_level).toBe('critical');
-      expect(result.risk_indicators).toContain(expect.stringContaining('Critical keyword detected'));
+      expect(result.risk_indicators.some(r => r.includes('Critical keyword detected'))).toBe(true);
     });
 
     it('should trigger high risk for "self-harm" even when AI returns low', async () => {
@@ -438,7 +438,7 @@ describe('Sentiment Service', () => {
       });
 
       expect(result.risk_level).toBe('high');
-      expect(result.risk_indicators).toContain(expect.stringContaining('High-risk keyword detected'));
+      expect(result.risk_indicators.some(r => r.includes('High-risk keyword detected'))).toBe(true);
     });
 
     it('should trigger high risk for "cutting" in context', async () => {

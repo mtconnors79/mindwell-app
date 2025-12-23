@@ -397,6 +397,7 @@ const getFallbackAnalysis = (text, structuredData = {}) => {
 
   // Also consider text-based keywords if provided
   if (text) {
+    const lowerText = text.toLowerCase();
     const positiveKeywords = ['happy', 'good', 'great', 'wonderful', 'amazing', 'grateful', 'thankful', 'excited', 'peaceful', 'calm', 'better', 'love', 'joy'];
     const negativeKeywords = ['sad', 'angry', 'frustrated', 'anxious', 'worried', 'stressed', 'tired', 'exhausted', 'lonely', 'depressed', 'hopeless', 'overwhelmed', 'scared'];
 
