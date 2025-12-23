@@ -181,6 +181,70 @@ jest.mock('react-native-config', () => ({
 // Mock Alert
 jest.spyOn(require('react-native').Alert, 'alert').mockImplementation(() => {});
 
+// Mock Platform with default iOS values
+const Platform = require('react-native').Platform;
+Platform.OS = 'ios';
+Platform.Version = '17.0';
+const originalSelect = Platform.select;
+Platform.select = (options) => {
+  if (options.ios !== undefined) return options.ios;
+  if (options.native !== undefined) return options.native;
+  return options.default;
+};
+
+// Mock Animated for testing
+const Animated = require('react-native').Animated;
+
+// Mock Animated.Value to fix TouchableOpacity animation issues
+const MockAnimatedValue = class {
+  constructor(value) {
+    this._value = value;
+    this._offset = 0;
+  }
+  setValue(value) { this._value = value; }
+  setOffset(offset) { this._offset = offset; }
+  flattenOffset() {}
+  extractOffset() {}
+  addListener() { return ''; }
+  removeListener() {}
+  removeAllListeners() {}
+  stopAnimation(callback) { callback && callback(this._value); }
+  resetAnimation(callback) { callback && callback(this._value); }
+  interpolate(config) { return new MockAnimatedValue(0); }
+};
+
+// Replace the original Animated.Value
+Animated.Value = MockAnimatedValue;
+
+Animated.timing = jest.fn(() => ({
+  start: jest.fn((callback) => callback && callback({ finished: true })),
+  stop: jest.fn(),
+  reset: jest.fn(),
+}));
+Animated.sequence = jest.fn((animations) => ({
+  start: jest.fn((callback) => callback && callback({ finished: true })),
+  stop: jest.fn(),
+  reset: jest.fn(),
+}));
+Animated.parallel = jest.fn((animations) => ({
+  start: jest.fn((callback) => callback && callback({ finished: true })),
+  stop: jest.fn(),
+  reset: jest.fn(),
+}));
+Animated.loop = jest.fn((animation) => ({
+  start: jest.fn(),
+  stop: jest.fn(),
+  reset: jest.fn(),
+}));
+Animated.spring = jest.fn(() => ({
+  start: jest.fn((callback) => callback && callback({ finished: true })),
+  stop: jest.fn(),
+  reset: jest.fn(),
+}));
+Animated.decay = jest.fn(() => ({
+  start: jest.fn((callback) => callback && callback({ finished: true })),
+  stop: jest.fn(),
+}));
 
 // Silence console warnings in tests
 const originalWarn = console.warn;

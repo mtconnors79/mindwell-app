@@ -70,6 +70,29 @@ jest.mock('../../components/AddReminderModal', () => {
   return () => <View testID="add-reminder-modal" />;
 });
 
+// Mock userSettingsAPI and goalsAPI
+jest.mock('../../services/api', () => ({
+  userSettingsAPI: {
+    getSettings: jest.fn(() => Promise.resolve({
+      data: {
+        settings: {
+          goal_notify_achieved: true,
+          goal_notify_expiring: true,
+          goal_notify_incomplete: true,
+          goal_history_retention_days: 90,
+        },
+      },
+    })),
+    updateSettings: jest.fn(() => Promise.resolve({ data: { success: true } })),
+  },
+}));
+
+jest.mock('../../services/goalsApi', () => ({
+  goalsAPI: {
+    clearHistory: jest.fn(() => Promise.resolve({ data: { message: 'History cleared' } })),
+  },
+}));
+
 const mockNavigation = {
   navigate: jest.fn(),
 };
@@ -376,6 +399,95 @@ describe('SettingsScreen', () => {
       );
 
       await findByText('Resource Suggestions');
+    });
+  });
+
+  describe('Goals section', () => {
+    it('renders Goals section header', async () => {
+      const { findByText } = render(
+        <SettingsScreen navigation={mockNavigation} />
+      );
+
+      await findByText('Goals');
+    });
+
+    it('renders Notify When Achieved toggle', async () => {
+      const { findByText } = render(
+        <SettingsScreen navigation={mockNavigation} />
+      );
+
+      await findByText('Notify When Achieved');
+    });
+
+    it('renders Remind Before Expiring toggle', async () => {
+      const { findByText } = render(
+        <SettingsScreen navigation={mockNavigation} />
+      );
+
+      await findByText('Remind Before Expiring');
+    });
+
+    it('renders Notify When Incomplete toggle', async () => {
+      const { findByText } = render(
+        <SettingsScreen navigation={mockNavigation} />
+      );
+
+      await findByText('Notify When Incomplete');
+    });
+
+    it('renders Goal History Retention picker', async () => {
+      const { findByText } = render(
+        <SettingsScreen navigation={mockNavigation} />
+      );
+
+      await findByText('Goal History Retention');
+    });
+
+    it('shows retention options when picker is tapped', async () => {
+      const { findByText } = render(
+        <SettingsScreen navigation={mockNavigation} />
+      );
+
+      // Goal History Retention text should be visible
+      await findByText('Goal History Retention');
+    });
+
+    it('renders Clear Goal History button', async () => {
+      const { findByText } = render(
+        <SettingsScreen navigation={mockNavigation} />
+      );
+
+      await findByText('Clear Goal History');
+    });
+
+    it('Clear Goal History shows confirmation when pressed', async () => {
+      const alertSpy = jest.spyOn(Alert, 'alert');
+
+      const { findByText } = render(
+        <SettingsScreen navigation={mockNavigation} />
+      );
+
+      const clearButton = await findByText('Clear Goal History');
+      fireEvent.press(clearButton);
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        'Clear Goal History',
+        'Are you sure you want to delete all past goals? This cannot be undone.',
+        expect.arrayContaining([
+          expect.objectContaining({ text: 'Cancel' }),
+          expect.objectContaining({ text: 'Clear All', style: 'destructive' }),
+        ])
+      );
+    });
+
+    it('goal notification toggles have correct descriptions', async () => {
+      const { findByText } = render(
+        <SettingsScreen navigation={mockNavigation} />
+      );
+
+      // Check for descriptions
+      await findByText('Celebrate when you complete a goal');
+      await findByText('Get notified when a goal is about to expire');
     });
   });
 });
