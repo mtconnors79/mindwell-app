@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -7,25 +7,48 @@ import auth from '@react-native-firebase/auth';
 
 // Components
 import RateLimitModal from '../components/RateLimitModal';
+import ScreenLoader from '../components/ScreenLoader';
 
 // API rate limit handlers
 import { setRateLimitHandler, clearRateLimitHandler } from '../services/api';
 
-// Auth Screens
+// Auth Screens (loaded immediately - needed for login flow)
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 
-// Main Screens
+// Main Tab Screens (loaded immediately for fast tab switching)
 import HomeScreen from '../screens/main/HomeScreen';
 import CheckInScreen from '../screens/main/CheckInScreen';
 import MoodScreen from '../screens/main/MoodScreen';
 import MindfulnessScreen from '../screens/main/MindfulnessScreen';
 import ProgressScreen from '../screens/main/ProgressScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
-import SettingsScreen from '../screens/main/SettingsScreen';
-import EmergencyContactsScreen from '../screens/main/EmergencyContactsScreen';
-import CareCircleScreen from '../screens/main/CareCircleScreen';
-import GoalHistoryScreen from '../screens/main/GoalHistoryScreen';
+
+// Lazy-loaded Stack Screens (only loaded when navigated to)
+const SettingsScreen = lazy(() => import('../screens/main/SettingsScreen'));
+const EmergencyContactsScreen = lazy(() => import('../screens/main/EmergencyContactsScreen'));
+const CareCircleScreen = lazy(() => import('../screens/main/CareCircleScreen'));
+const GoalHistoryScreen = lazy(() => import('../screens/main/GoalHistoryScreen'));
+
+/**
+ * Wrapper to make lazy-loaded screens work with React Navigation
+ * Wraps the lazy component with Suspense fallback
+ */
+const withLazyLoading = (LazyComponent, loaderMessage) => {
+  return function LazyScreen(props) {
+    return (
+      <Suspense fallback={<ScreenLoader message={loaderMessage} />}>
+        <LazyComponent {...props} />
+      </Suspense>
+    );
+  };
+};
+
+// Create wrapped versions of lazy screens
+const LazySettingsScreen = withLazyLoading(SettingsScreen, 'Loading settings...');
+const LazyEmergencyContactsScreen = withLazyLoading(EmergencyContactsScreen, 'Loading contacts...');
+const LazyCareCircleScreen = withLazyLoading(CareCircleScreen, 'Loading Care Circle...');
+const LazyGoalHistoryScreen = withLazyLoading(GoalHistoryScreen, 'Loading goals...');
 
 const Stack = createStackNavigator();
 const MainStack = createStackNavigator();
@@ -68,6 +91,8 @@ const MainTabNavigator = () => {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
+        // Enable lazy loading globally - screens only load when first visited
+        lazy: true,
       }}
     >
       <Tab.Screen
@@ -76,6 +101,7 @@ const MainTabNavigator = () => {
         options={{
           title: 'SoulBloom',
           tabBarIcon: HomeTabIcon,
+          lazy: false, // Home loads immediately as initial screen
         }}
       />
       <Tab.Screen
@@ -84,6 +110,7 @@ const MainTabNavigator = () => {
         options={{
           title: 'Daily Check-In',
           tabBarIcon: CheckInTabIcon,
+          // lazy: true (inherited from screenOptions)
         }}
       />
       <Tab.Screen
@@ -92,6 +119,7 @@ const MainTabNavigator = () => {
         options={{
           title: 'My Journey',
           tabBarIcon: MoodTabIcon,
+          // lazy: true (inherited from screenOptions)
         }}
       />
       <Tab.Screen
@@ -100,6 +128,7 @@ const MainTabNavigator = () => {
         options={{
           title: 'Mindfulness',
           tabBarIcon: MindfulnessTabIcon,
+          // lazy: true (inherited from screenOptions)
         }}
       />
       <Tab.Screen
@@ -108,6 +137,7 @@ const MainTabNavigator = () => {
         options={{
           title: 'Progress',
           tabBarIcon: ProgressTabIcon,
+          // lazy: true (inherited from screenOptions)
         }}
       />
       <Tab.Screen
@@ -116,6 +146,7 @@ const MainTabNavigator = () => {
         options={{
           title: 'Profile',
           tabBarIcon: ProfileTabIcon,
+          // lazy: true (inherited from screenOptions)
         }}
       />
     </Tab.Navigator>
@@ -132,7 +163,7 @@ const MainStackNavigator = () => {
       />
       <MainStack.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={LazySettingsScreen}
         options={{
           title: 'Settings',
           headerStyle: {
@@ -146,7 +177,7 @@ const MainStackNavigator = () => {
       />
       <MainStack.Screen
         name="EmergencyContacts"
-        component={EmergencyContactsScreen}
+        component={LazyEmergencyContactsScreen}
         options={{
           title: 'Emergency Contacts',
           headerStyle: {
@@ -160,7 +191,7 @@ const MainStackNavigator = () => {
       />
       <MainStack.Screen
         name="CareCircle"
-        component={CareCircleScreen}
+        component={LazyCareCircleScreen}
         options={{
           title: 'Care Circle',
           headerStyle: {
@@ -174,7 +205,7 @@ const MainStackNavigator = () => {
       />
       <MainStack.Screen
         name="GoalHistory"
-        component={GoalHistoryScreen}
+        component={LazyGoalHistoryScreen}
         options={{
           title: 'Past Goals',
           headerStyle: {
