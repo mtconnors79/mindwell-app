@@ -37,7 +37,21 @@ const { initializeCronJobs, stopAllCronJobs } = require('./jobs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// CORS configuration for production and development
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? [
+        /\.elasticbeanstalk\.com$/,  // Allow EB domains
+        /\.soulbloom\.com$/,          // Allow soulbloom domains
+        process.env.FRONTEND_URL      // Allow configured frontend URL
+      ].filter(Boolean)
+    : '*', // Allow all in development
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "SoulBloom App Backend Server - Grow gently, live fully",
   "main": "index.js",
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  },
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",

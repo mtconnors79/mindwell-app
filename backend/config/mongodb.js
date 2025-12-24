@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const connectMongoDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mindwell_mongo';
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/soulbloom_mongo';
 
     await mongoose.connect(mongoURI);
 
