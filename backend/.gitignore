@@ -6,4 +6,4 @@ dist/
 build/
 
 # Firebase service account (contains private key)
-config/firebase-service-account.json
+config/firebase-service-account.jsoncoverage/
