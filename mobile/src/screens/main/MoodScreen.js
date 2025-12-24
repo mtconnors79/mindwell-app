@@ -247,8 +247,8 @@ const MoodScreen = () => {
       });
     }
 
-    // Sort by ISO date (chronological) and take last 7 days
-    const sortedIsoDates = Object.keys(moodByDate).sort().slice(-7);
+    // Sort by ISO date (chronological) and take last N days based on timeframe
+    const sortedIsoDates = Object.keys(moodByDate).sort().slice(-timeframe);
     const dates = sortedIsoDates.map((iso) => moodByDate[iso].displayDate);
     const values = sortedIsoDates.map((iso) => moodByDate[iso].total / moodByDate[iso].count);
 
@@ -259,7 +259,7 @@ const MoodScreen = () => {
       datasets: [{ data: values }],
       dateKeys: dates, // For tappable functionality
     };
-  }, [checkins, recentMoods]);
+  }, [checkins, recentMoods, timeframe]);
 
   // Process mood data for detailed view (individual entries)
   const getMoodTrendDataDetailed = useCallback(() => {
@@ -384,8 +384,8 @@ const MoodScreen = () => {
       stressByDate[isoDate].count += 1;
     });
 
-    // Sort by ISO date (chronological) and take last 7 days
-    const sortedIsoDates = Object.keys(stressByDate).sort().slice(-7);
+    // Sort by ISO date (chronological) and take last N days based on timeframe
+    const sortedIsoDates = Object.keys(stressByDate).sort().slice(-timeframe);
     const dates = sortedIsoDates.map((iso) => stressByDate[iso].displayDate);
     const values = sortedIsoDates.map((iso) => stressByDate[iso].total / stressByDate[iso].count);
 
@@ -395,7 +395,7 @@ const MoodScreen = () => {
       labels: dates,
       datasets: [{ data: values }],
     };
-  }, [checkins]);
+  }, [checkins, timeframe]);
 
   // Process stress data for detailed view
   const getStressTrendDataDetailed = useCallback(() => {
