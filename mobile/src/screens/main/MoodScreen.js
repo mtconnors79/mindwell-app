@@ -214,36 +214,43 @@ const MoodScreen = () => {
       return null;
     }
 
+    // Use ISO date string as key for proper sorting
     const moodByDate = {};
 
     if (hasCheckins) {
       checkins.forEach((checkin) => {
-        const date = new Date(checkin.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const dateObj = new Date(checkin.created_at);
+        const isoDate = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD for sorting
+        const displayDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         const moodValue = MOOD_RATING_MAP[checkin.mood_rating]?.value || 3;
 
-        if (!moodByDate[date]) {
-          moodByDate[date] = { total: 0, count: 0 };
+        if (!moodByDate[isoDate]) {
+          moodByDate[isoDate] = { total: 0, count: 0, displayDate };
         }
-        moodByDate[date].total += moodValue;
-        moodByDate[date].count += 1;
+        moodByDate[isoDate].total += moodValue;
+        moodByDate[isoDate].count += 1;
       });
     }
 
     if (hasMoods) {
       recentMoods.forEach((mood) => {
-        const date = new Date(mood.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const dateObj = new Date(mood.created_at);
+        const isoDate = dateObj.toISOString().split('T')[0];
+        const displayDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         const moodValue = Math.round((parseFloat(mood.sentiment_score) + 1) * 2) + 1;
 
-        if (!moodByDate[date]) {
-          moodByDate[date] = { total: 0, count: 0 };
+        if (!moodByDate[isoDate]) {
+          moodByDate[isoDate] = { total: 0, count: 0, displayDate };
         }
-        moodByDate[date].total += moodValue;
-        moodByDate[date].count += 1;
+        moodByDate[isoDate].total += moodValue;
+        moodByDate[isoDate].count += 1;
       });
     }
 
-    const dates = Object.keys(moodByDate).slice(-7);
-    const values = dates.map((date) => moodByDate[date].total / moodByDate[date].count);
+    // Sort by ISO date (chronological) and take last 7 days
+    const sortedIsoDates = Object.keys(moodByDate).sort().slice(-7);
+    const dates = sortedIsoDates.map((iso) => moodByDate[iso].displayDate);
+    const values = sortedIsoDates.map((iso) => moodByDate[iso].total / moodByDate[iso].count);
 
     if (dates.length === 0) return null;
 
@@ -363,19 +370,24 @@ const MoodScreen = () => {
       return null;
     }
 
+    // Use ISO date string as key for proper sorting
     const stressByDate = {};
     checkins.forEach((checkin) => {
-      const date = new Date(checkin.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const dateObj = new Date(checkin.created_at);
+      const isoDate = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD for sorting
+      const displayDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-      if (!stressByDate[date]) {
-        stressByDate[date] = { total: 0, count: 0 };
+      if (!stressByDate[isoDate]) {
+        stressByDate[isoDate] = { total: 0, count: 0, displayDate };
       }
-      stressByDate[date].total += checkin.stress_level || 5;
-      stressByDate[date].count += 1;
+      stressByDate[isoDate].total += checkin.stress_level || 5;
+      stressByDate[isoDate].count += 1;
     });
 
-    const dates = Object.keys(stressByDate).slice(-7);
-    const values = dates.map((date) => stressByDate[date].total / stressByDate[date].count);
+    // Sort by ISO date (chronological) and take last 7 days
+    const sortedIsoDates = Object.keys(stressByDate).sort().slice(-7);
+    const dates = sortedIsoDates.map((iso) => stressByDate[iso].displayDate);
+    const values = sortedIsoDates.map((iso) => stressByDate[iso].total / stressByDate[iso].count);
 
     if (dates.length === 0) return null;
 
